@@ -529,7 +529,7 @@
   }
 
   /* ============================ BOOT ============================ */
-  document.addEventListener('DOMContentLoaded', async function () {
+  async function boot() {
     setupAuth();
     setupNav();
     setupEvents();
@@ -539,5 +539,12 @@
     } else {
       $('auth-screen').hidden = false;
     }
-  });
+  }
+
+  // Inicia agora se a página já carregou; senão, espera o carregamento.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
 })();
