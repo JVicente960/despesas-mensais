@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0710" />
+  <title>Aurora · Controle de despesas</title>
+
+  <!-- Fontes: Bricolage Grotesque para os números/títulos, Inter para o corpo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Brilhos de fundo (aurora). Intensidade controlada pela classe .glow no CSS -->
+  <div class="aurora" aria-hidden="true">
+    <span class="aurora__blob aurora__blob--pink"></span>
+    <span class="aurora__blob aurora__blob--teal"></span>
+    <span class="aurora__blob aurora__blob--blue"></span>
+  </div>
+
+  <!-- ============================== TELA DE LOGIN ============================== -->
+  <main id="auth-screen" class="auth" hidden>
+    <section class="auth__card">
+      <div class="brand">
+        <span class="brand__dot"></span>
+        <span class="brand__name">Aurora</span>
+      </div>
+      <h1 class="auth__title" id="auth-title">Entrar</h1>
+      <p class="auth__subtitle" id="auth-subtitle">Acesse seu painel de despesas.</p>
+
+      <form id="auth-form" class="auth__form" autocomplete="off">
+        <label class="field">
+          <span class="field__label">Usuário</span>
+          <input class="field__input" id="auth-user" name="user" type="text" autocomplete="username" required />
+        </label>
+        <label class="field">
+          <span class="field__label">Senha</span>
+          <input class="field__input" id="auth-pass" name="pass" type="password" autocomplete="current-password" required />
+        </label>
+
+        <p class="auth__error" id="auth-error" role="alert"></p>
+
+        <button class="btn btn--primary btn--block" type="submit" id="auth-submit">Entrar</button>
+      </form>
+
+      <p class="auth__switch">
+        <span id="auth-switch-text">Não tem conta?</span>
+        <button class="link" id="auth-switch-btn" type="button">Criar conta</button>
+      </p>
+    </section>
+  </main>
+
+  <!-- ============================== APLICATIVO ============================== -->
+  <div id="app" class="app" hidden>
+    <!-- Cabeçalho -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__dot"></span>
+        <span class="brand__name">Aurora</span>
+      </div>
+
+      <nav class="monthnav" aria-label="Selecionar mês">
+        <button class="iconbtn" id="month-prev" aria-label="Mês anterior">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <span class="monthnav__label" id="month-label">—</span>
+        <button class="iconbtn" id="month-next" aria-label="Próximo mês">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </nav>
+
+      <div class="avatar" id="avatar-btn" role="button" tabindex="0" aria-haspopup="menu" aria-label="Menu da conta">
+        <span id="avatar-initials">CM</span>
+        <div class="menu" id="account-menu" hidden role="menu">
+          <span class="menu__name" id="menu-username"></span>
+          <button class="menu__item" id="menu-budget" role="menuitem">Definir orçamento</button>
+          <button class="menu__item" id="menu-currency" role="menuitem">Moeda: R$</button>
+          <button class="menu__item menu__item--danger" id="menu-logout" role="menuitem">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Abas -->
+    <div class="tabs" role="tablist">
+      <button class="tab is-active" data-view="overview" role="tab">Visão geral</button>
+      <button class="tab" data-view="investments" role="tab">Investimentos</button>
+      <button class="tab" data-view="history" role="tab">Histórico</button>
+      <button class="tab" data-view="categories" role="tab">Categorias</button>
+    </div>
+
+    <!-- ----------- VISÃO GERAL ----------- -->
+    <section class="view view--overview is-active" data-view="overview">
+      <div class="overview-grid">
+        <!-- Card principal: gráfico + legenda -->
+        <article class="card card--spending">
+          <div class="donut" id="donut"></div>
+          <div class="legend" id="legend"></div>
+          <button class="link card__action" id="edit-categories">Editar categorias</button>
+        </article>
+
+        <!-- Coluna direita -->
+        <div class="overview-side">
+          <div class="stat-row">
+            <article class="card card--stat">
+              <span class="card__label">Disponível</span>
+              <strong class="stat stat--green" id="stat-left">—</strong>
+              <span class="card__hint" id="stat-left-hint">—</span>
+            </article>
+            <article class="card card--stat">
+              <span class="card__label">Média diária</span>
+              <strong class="stat stat--cyan" id="stat-daily">—</strong>
+              <span class="card__hint" id="stat-daily-hint">—</span>
+            </article>
+          </div>
+
+          <article class="card card--activity">
+            <div class="card__head">
+              <span class="card__label">Atividade recente</span>
+              <button class="btn btn--small" id="add-expense">+ Despesa</button>
+            </div>
+            <ul class="activity" id="activity"></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------- INVESTIMENTOS ----------- -->
+    <section class="view view--investments" data-view="investments" hidden>
+      <div class="inv-grid">
+        <article class="card card--stat">
+          <span class="card__label">Total investido</span>
+          <strong class="stat" id="inv-invested">—</strong>
+        </article>
+        <article class="card card--stat">
+          <span class="card__label">Valor atual</span>
+          <strong class="stat stat--cyan" id="inv-current">—</strong>
+        </article>
+        <article class="card card--stat">
+          <span class="card__label">Rendimento</span>
+          <strong class="stat stat--green" id="inv-return">—</strong>
+          <span class="card__hint" id="inv-return-pct">—</span>
+        </article>
+      </div>
+
+      <div class="inv-main">
+        <article class="card card--spending card--inv-chart">
+          <div class="donut" id="inv-donut"></div>
+          <div class="legend" id="inv-legend"></div>
+        </article>
+
+        <article class="card card--activity">
+          <div class="card__head">
+            <span class="card__label">Meus investimentos</span>
+            <button class="btn btn--small" id="add-investment">+ Investimento</button>
+          </div>
+          <ul class="activity" id="inv-list"></ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ----------- HISTÓRICO ----------- -->
+    <section class="view view--history" data-view="history" hidden>
+      <article class="card">
+        <div class="card__head">
+          <span class="card__label">Gastos por mês</span>
+        </div>
+        <div class="barchart" id="barchart"></div>
+      </article>
+
+      <article class="card card--activity">
+        <div class="card__head">
+          <span class="card__label" id="history-month-label">Detalhes do mês</span>
+        </div>
+        <ul class="activity activity--breakdown" id="history-breakdown"></ul>
+      </article>
+    </section>
+
+    <!-- ----------- CATEGORIAS ----------- -->
+    <section class="view view--categories" data-view="categories" hidden>
+      <article class="card">
+        <div class="card__head">
+          <span class="card__label">Suas categorias</span>
+          <button class="btn btn--small" id="add-category">+ Categoria</button>
+        </div>
+        <ul class="catlist" id="catlist"></ul>
+      </article>
+    </section>
+  </div>
+
+  <!-- ============================== MODAL GENÉRICO ============================== -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal__head">
+        <h2 class="modal__title" id="modal-title">Título</h2>
+        <button class="iconbtn" data-close aria-label="Fechar">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <form id="modal-form" class="modal__body"></form>
+    </div>
+  </div>
+
+  <!-- Scripts separados, carregados em ordem -->
+  <script src="js/storage.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
