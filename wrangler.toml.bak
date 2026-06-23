@@ -12,6 +12,6 @@ pages_build_output_dir = "."
 # Banco D1 — cole o database_id que aparece ao rodar:
 #   wrangler d1 create aurora-db
 [[d1_databases]]
-binding = "aurora_db"
+binding = "DB"
 database_name = "aurora-db"
 database_id = "e8358982-cff2-4a12-bda5-cff4d86b9d7f"
