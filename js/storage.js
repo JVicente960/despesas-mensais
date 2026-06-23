@@ -2,26 +2,27 @@
    storage.js · Camada de dados e autenticação (ONLINE)
    ---------------------------------------------------------------------
    Conversa com o backend em Cloudflare Pages Functions + D1.
-   As contas e os dados ficam no servidor, sincronizados entre dispositivos.
-   No navegador guardamos só o token de sessão e o nome do usuário.
+   Contas e dados ficam no servidor, sincronizados entre dispositivos.
 
-   Expõe um objeto global: window.Store
+   Modelo de dados (v2):
+     budget         -> orçamento padrão (fixo)
+     monthBudgets   -> { 'YYYY-MM': valor } overrides por mês
+     currency       -> 'BRL' | 'USD'
+     categories     -> [{ id, name, color }]
+     expenses       -> [{ id, merchant, categoryId, entries:[{id,date,amount}] }]
+     investments    -> [{ id, name, type, color, current,
+                          movements:[{id, kind:'aporte'|'saque', date, amount}] }]
+
+   Expõe: window.Store
    ===================================================================== */
 (function () {
   'use strict';
 
-  // Mesma origem do site (a API mora em /api/* no mesmo deploy do Pages).
-  // Se um dia hospedar a API em outro domínio, troque aqui.
   var API_BASE = '';
-
-  var KEYS = {
-    token: 'aurora.token',
-    user:  'aurora.user'
-  };
+  var KEYS = { token: 'aurora.token', user: 'aurora.user' };
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
-  // Chamada HTTP genérica à API. Lança Error com mensagem amigável em caso de falha.
   async function api(method, path, body) {
     var headers = { 'Content-Type': 'application/json' };
     var token = localStorage.getItem(KEYS.token);
@@ -30,13 +31,10 @@
     var res;
     try {
       res = await fetch(API_BASE + path, {
-        method: method,
-        headers: headers,
+        method: method, headers: headers,
         body: body !== undefined ? JSON.stringify(body) : undefined
       });
-    } catch (e) {
-      throw new Error('Não foi possível conectar ao servidor.');
-    }
+    } catch (e) { throw new Error('Não foi possível conectar ao servidor.'); }
 
     var data = null;
     try { data = await res.json(); } catch (e) { data = {}; }
@@ -58,85 +56,103 @@
     ];
   }
 
-  /* ----------------- despesas iniciais (seed) ----------------------- */
-  // Usado só na PRIMEIRA vez que um usuário entra (servidor ainda sem dados),
-  // para o painel e o histórico já nascerem preenchidos.
-  function seedTransactions() {
+  /* ----------------- dados iniciais (seed) -------------------------- */
+  function seedExpenses() {
     var now = new Date();
-    var txns = [];
-    function dateInMonth(monthsAgo, day) {
-      return new Date(now.getFullYear(), now.getMonth() - monthsAgo, day).toISOString().slice(0, 10);
+    function iso(m, day) { return new Date(now.getFullYear(), now.getMonth() - m, day).toISOString().slice(0, 10); }
+    function exp(merchant, catId, entries) {
+      return { id: uid(), merchant: merchant, categoryId: catId,
+        entries: entries.map(function (e) { return { id: uid(), date: iso(e[0], e[1]), amount: e[2] }; }) };
     }
-    function add(monthsAgo, day, merchant, catId, amount) {
-      txns.push({ id: uid(), date: dateInMonth(monthsAgo, day), merchant: merchant, categoryId: catId, amount: amount });
-    }
-
-    // Mês atual
-    add(0, 5,  'Aluguel',            'cat-moradia',  1650);
-    add(0, 8,  'Supermercado',       'cat-alimento',  320);
-    add(0, 14, 'iFood',              'cat-alimento',   95);
-    add(0, 18, 'Restaurante',        'cat-alimento',  130);
-    add(0, 20, 'Padaria',            'cat-alimento',   45);
-    add(0, 21, 'Mercado',            'cat-alimento',  130);
-    add(0, 6,  'Combustível',        'cat-transp',    220);
-    add(0, 12, 'Uber',               'cat-transp',     70);
-    add(0, 2,  'Transporte público', 'cat-transp',     50);
-    add(0, 9,  'Amazon',             'cat-compras',   210);
-    add(0, 16, 'Roupas',             'cat-compras',   200);
-    add(0, 7,  'Farmácia',           'cat-saude',      80);
-    add(0, 1,  'Academia',           'cat-saude',     120);
-    add(0, 15, 'Consulta',           'cat-saude',      50);
-    add(0, 10, 'Energia',            'cat-contas',    130);
-    add(0, 10, 'Internet',           'cat-contas',    100);
-    add(0, 10, 'Celular',            'cat-contas',     50);
-    add(0, 3,  'Netflix',            'cat-lazer',      55);
-    add(0, 3,  'Spotify',            'cat-lazer',      35);
-    add(0, 17, 'Cinema',             'cat-lazer',      60);
-    add(0, 19, 'Steam',              'cat-lazer',      40);
-    add(0, 11, 'Presente',           'cat-outros',    240);
-    add(0, 13, 'Pet shop',           'cat-outros',    200);
-
-    // Meses anteriores (recorrentes) para o histórico
-    [1, 2].forEach(function (m) {
-      add(m, 5,  'Aluguel',      'cat-moradia',  1650);
-      add(m, 8,  'Supermercado', 'cat-alimento',  300 + m * 30);
-      add(m, 10, 'Energia',      'cat-contas',    120 + m * 10);
-      add(m, 10, 'Internet',     'cat-contas',    100);
-      add(m, 10, 'Celular',      'cat-contas',     50);
-      add(m, 6,  'Combustível',  'cat-transp',    200);
-      add(m, 3,  'Netflix',      'cat-lazer',      55);
-      add(m, 3,  'Spotify',      'cat-lazer',      35);
-      add(m, 9,  'Compras',      'cat-compras',   180 + m * 40);
-      add(m, 7,  'Farmácia',     'cat-saude',      90);
-    });
-    return txns;
+    return [
+      exp('Aluguel', 'cat-moradia', [[0,5,1650],[1,5,1650],[2,5,1650]]),
+      exp('Supermercado', 'cat-alimento', [[0,8,320],[1,8,300],[2,8,330]]),
+      exp('Padaria', 'cat-alimento', [[0,20,25],[0,21,20]]),
+      exp('iFood', 'cat-alimento', [[0,14,95]]),
+      exp('Restaurante', 'cat-alimento', [[0,18,130]]),
+      exp('Combustível', 'cat-transp', [[0,6,220],[1,6,200],[2,6,200]]),
+      exp('Uber', 'cat-transp', [[0,12,70]]),
+      exp('Transporte público', 'cat-transp', [[0,2,50]]),
+      exp('Amazon', 'cat-compras', [[0,9,210]]),
+      exp('Roupas', 'cat-compras', [[0,16,200]]),
+      exp('Farmácia', 'cat-saude', [[0,7,80],[1,7,90],[2,7,90]]),
+      exp('Academia', 'cat-saude', [[0,1,120]]),
+      exp('Consulta', 'cat-saude', [[0,15,50]]),
+      exp('Energia', 'cat-contas', [[0,10,130],[1,10,140],[2,10,150]]),
+      exp('Internet', 'cat-contas', [[0,10,100],[1,10,100],[2,10,100]]),
+      exp('Celular', 'cat-contas', [[0,10,50],[1,10,50],[2,10,50]]),
+      exp('Netflix', 'cat-lazer', [[0,3,55],[1,3,55],[2,3,55]]),
+      exp('Spotify', 'cat-lazer', [[0,3,35],[1,3,35],[2,3,35]]),
+      exp('Cinema', 'cat-lazer', [[0,17,60]]),
+      exp('Steam', 'cat-lazer', [[0,19,40]]),
+      exp('Presente', 'cat-outros', [[0,11,240]]),
+      exp('Pet shop', 'cat-outros', [[0,13,200]])
+    ];
   }
 
   function seedInvestments() {
-    var today = new Date().toISOString().slice(0, 10);
+    function d(m) { var x = new Date(); return new Date(x.getFullYear(), x.getMonth() - m, 10).toISOString().slice(0, 10); }
     return [
-      { id: uid(), name: 'Tesouro Selic 2029', type: 'Renda Fixa', invested: 5000, current: 5350, date: today, color: '#00d6b4' },
-      { id: uid(), name: 'PETR4',              type: 'Ações',      invested: 3000, current: 3280, date: today, color: '#3366ff' },
-      { id: uid(), name: 'MXRF11',             type: 'FII',        invested: 2000, current: 2090, date: today, color: '#b94dff' },
-      { id: uid(), name: 'Bitcoin',            type: 'Cripto',     invested: 1500, current: 1820, date: today, color: '#ff2d78' }
+      { id: uid(), name: 'Tesouro Selic 2029', type: 'Renda Fixa', color: '#00d6b4', current: 5350, movements: [{ id: uid(), kind: 'aporte', date: d(6), amount: 5000 }] },
+      { id: uid(), name: 'PETR4',  type: 'Ações',  color: '#3366ff', current: 3280, movements: [{ id: uid(), kind: 'aporte', date: d(4), amount: 3000 }] },
+      { id: uid(), name: 'MXRF11', type: 'FII',    color: '#b94dff', current: 2090, movements: [{ id: uid(), kind: 'aporte', date: d(3), amount: 2000 }] },
+      { id: uid(), name: 'Bitcoin',type: 'Cripto', color: '#ff2d78', current: 1820, movements: [{ id: uid(), kind: 'aporte', date: d(5), amount: 1500 }] }
     ];
   }
 
   function freshUserData() {
     return {
-      budget: 5000,
-      currency: 'BRL',
+      budget: 5000, currency: 'BRL', monthBudgets: {},
       categories: defaultCategories(),
-      transactions: seedTransactions(),
+      expenses: seedExpenses(),
       investments: seedInvestments()
     };
+  }
+
+  /* -------- migração: converte dados antigos (v1) para v2 ----------- */
+  function migrate(data) {
+    if (!data) return data;
+
+    // transações planas -> despesas agrupadas por (descrição + categoria)
+    if (data.transactions && !data.expenses) {
+      var map = {};
+      data.expenses = [];
+      data.transactions.forEach(function (t) {
+        var key = (t.merchant || 'Despesa') + '|' + t.categoryId;
+        if (!map[key]) {
+          map[key] = { id: uid(), merchant: t.merchant || 'Despesa', categoryId: t.categoryId, entries: [] };
+          data.expenses.push(map[key]);
+        }
+        map[key].entries.push({ id: t.id || uid(), date: t.date, amount: t.amount });
+      });
+      delete data.transactions;
+    }
+    if (!data.expenses) data.expenses = [];
+
+    // investimentos antigos (invested/current) -> movements
+    (data.investments || []).forEach(function (inv) {
+      if (!inv.movements) {
+        inv.movements = [{ id: uid(), kind: 'aporte',
+          date: inv.date || new Date().toISOString().slice(0, 10),
+          amount: inv.invested || 0 }];
+      }
+      if (inv.current == null) inv.current = inv.invested || 0;
+      if (!inv.color) inv.color = '#3366ff';
+      if (!inv.type) inv.type = 'Outros';
+    });
+    if (!data.investments) data.investments = [];
+
+    if (!data.monthBudgets) data.monthBudgets = {};
+    if (data.budget == null) data.budget = 5000;
+    if (!data.currency) data.currency = 'BRL';
+    if (!data.categories) data.categories = defaultCategories();
+    return data;
   }
 
   /* --------------------------- API pública -------------------------- */
   var Store = {
     uid: uid,
 
-    // -- autenticação --
     async register(username, password) {
       try { await api('POST', '/api/register', { username: username, password: password }); return { ok: true }; }
       catch (e) { return { ok: false, error: e.message }; }
@@ -152,29 +168,24 @@
     },
 
     async logout() {
-      try { await api('POST', '/api/logout'); } catch (e) { /* ignora erro de rede no logout */ }
+      try { await api('POST', '/api/logout'); } catch (e) {}
       localStorage.removeItem(KEYS.token);
       localStorage.removeItem(KEYS.user);
     },
 
-    // Retorna o nome do usuário logado (sincrono) ou null.
     currentUser() {
       return localStorage.getItem(KEYS.token) ? localStorage.getItem(KEYS.user) : null;
     },
 
-    // -- dados (assíncrono) --
-    // Busca os dados no servidor. Se for um usuário novo (sem dados), semeia e salva.
     async fetchData() {
       var res = await api('GET', '/api/data');
-      if (res.data) return res.data;
+      if (res.data) return migrate(res.data);
       var seeded = freshUserData();
       await this.saveData(seeded);
       return seeded;
     },
 
-    async saveData(data) {
-      return api('PUT', '/api/data', data);
-    }
+    async saveData(data) { return api('PUT', '/api/data', data); }
   };
 
   window.Store = Store;
