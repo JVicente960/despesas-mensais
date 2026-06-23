@@ -529,22 +529,18 @@
   }
 
   /* ============================ BOOT ============================ */
-  async function boot() {
+ async function boot() {
+    document.title = 'BOOT RODOU';   // marca de teste
     setupAuth();
     setupNav();
     setupEvents();
-
     if (Store.currentUser()) {
       await startApp();
     } else {
       $('auth-screen').hidden = false;
+      document.getElementById('modal').hidden = true;   // garante modal escondido
     }
   }
 
-  // Inicia agora se a página já carregou; senão, espera o carregamento.
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
+  setTimeout(boot, 0);
 })();
