@@ -29,27 +29,27 @@
         <span class="brand__dot"></span>
         <span class="brand__name">Aurora</span>
       </div>
-      <h1 class="auth__title" id="auth-title">Entrar</h1>
-      <p class="auth__subtitle" id="auth-subtitle">Acesse seu painel de despesas.</p>
+      <h1 class="auth__title" id="auth-title" data-i18n="login_title">Entrar</h1>
+      <p class="auth__subtitle" id="auth-subtitle" data-i18n="login_sub">Acesse seu painel de despesas.</p>
 
       <form id="auth-form" class="auth__form" autocomplete="off">
         <label class="field">
-          <span class="field__label">Usuário</span>
+          <span class="field__label" data-i18n="user_label">Usuário</span>
           <input class="field__input" id="auth-user" name="user" type="text" autocomplete="username" required />
         </label>
         <label class="field">
-          <span class="field__label">Senha</span>
+          <span class="field__label" data-i18n="pass_label">Senha</span>
           <input class="field__input" id="auth-pass" name="pass" type="password" autocomplete="current-password" required />
         </label>
 
         <p class="auth__error" id="auth-error" role="alert"></p>
 
-        <button class="btn btn--primary btn--block" type="submit" id="auth-submit">Entrar</button>
+        <button class="btn btn--primary btn--block" type="submit" id="auth-submit" data-i18n="login_btn">Entrar</button>
       </form>
 
       <p class="auth__switch">
-        <span id="auth-switch-text">Não tem conta?</span>
-        <button class="link" id="auth-switch-btn" type="button">Criar conta</button>
+        <span id="auth-switch-text" data-i18n="no_account">Não tem conta?</span>
+        <button class="link" id="auth-switch-btn" type="button" data-i18n="register_btn">Criar conta</button>
       </p>
     </section>
   </main>
@@ -63,33 +63,34 @@
         <span class="brand__name">Aurora</span>
       </div>
 
-      <nav class="monthnav" aria-label="Selecionar mês">
-        <button class="iconbtn" id="month-prev" aria-label="Mês anterior">
+      <nav class="monthnav" aria-label="Selecionar mês" data-i18n-aria="select_month">
+        <button class="iconbtn" id="month-prev" aria-label="Mês anterior" data-i18n-aria="prev_month">
           <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         <span class="monthnav__label" id="month-label">—</span>
-        <button class="iconbtn" id="month-next" aria-label="Próximo mês">
+        <button class="iconbtn" id="month-next" aria-label="Próximo mês" data-i18n-aria="next_month">
           <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </nav>
 
-      <div class="avatar" id="avatar-btn" role="button" tabindex="0" aria-haspopup="menu" aria-label="Menu da conta">
+      <div class="avatar" id="avatar-btn" role="button" tabindex="0" aria-haspopup="menu" aria-label="Menu da conta" data-i18n-aria="account_menu">
         <span id="avatar-initials">CM</span>
         <div class="menu" id="account-menu" hidden role="menu">
           <span class="menu__name" id="menu-username"></span>
-          <button class="menu__item" id="menu-budget" role="menuitem">Definir orçamento</button>
-          <button class="menu__item" id="menu-currency" role="menuitem">Moeda: R$</button>
-          <button class="menu__item menu__item--danger" id="menu-logout" role="menuitem">Sair</button>
+          <button class="menu__item" id="menu-budget" role="menuitem" data-i18n="menu_budget">Definir orçamento</button>
+          <button class="menu__item" id="menu-currency" role="menuitem">Moeda</button>
+          <button class="menu__item" id="menu-language" role="menuitem">Idioma</button>
+          <button class="menu__item menu__item--danger" id="menu-logout" role="menuitem" data-i18n="menu_logout">Sair</button>
         </div>
       </div>
     </header>
 
     <!-- Abas -->
     <div class="tabs" role="tablist">
-      <button class="tab is-active" data-view="overview" role="tab">Visão geral</button>
-      <button class="tab" data-view="investments" role="tab">Investimentos</button>
-      <button class="tab" data-view="history" role="tab">Histórico</button>
-      <button class="tab" data-view="categories" role="tab">Categorias</button>
+      <button class="tab is-active" data-view="overview" role="tab" data-i18n="tab_overview">Visão geral</button>
+      <button class="tab" data-view="investments" role="tab" data-i18n="tab_investments">Investimentos</button>
+      <button class="tab" data-view="history" role="tab" data-i18n="tab_history">Histórico</button>
+      <button class="tab" data-view="categories" role="tab" data-i18n="tab_categories">Categorias</button>
     </div>
 
     <!-- ----------- VISÃO GERAL ----------- -->
@@ -99,19 +100,19 @@
         <article class="card card--spending">
           <div class="donut" id="donut"></div>
           <div class="legend" id="legend"></div>
-          <button class="link card__action" id="edit-categories">Editar categorias</button>
+          <button class="link card__action" id="edit-categories" data-i18n="edit_categories">Editar categorias</button>
         </article>
 
         <!-- Coluna direita -->
         <div class="overview-side">
           <div class="stat-row">
             <article class="card card--stat">
-              <span class="card__label">Disponível</span>
+              <span class="card__label" data-i18n="available">Disponível</span>
               <strong class="stat stat--green" id="stat-left">—</strong>
               <span class="card__hint" id="stat-left-hint">—</span>
             </article>
             <article class="card card--stat">
-              <span class="card__label">Média diária</span>
+              <span class="card__label" data-i18n="daily_avg">Média diária</span>
               <strong class="stat stat--cyan" id="stat-daily">—</strong>
               <span class="card__hint" id="stat-daily-hint">—</span>
             </article>
@@ -119,8 +120,8 @@
 
           <article class="card card--activity">
             <div class="card__head">
-              <span class="card__label">Atividade recente</span>
-              <button class="btn btn--small" id="add-expense">+ Despesa</button>
+              <span class="card__label" data-i18n="recent_activity">Atividade recente</span>
+              <button class="btn btn--small" id="add-expense" data-i18n="add_expense">+ Despesa</button>
             </div>
             <ul class="activity" id="activity"></ul>
           </article>
@@ -132,15 +133,15 @@
     <section class="view view--investments" data-view="investments" hidden>
       <div class="inv-grid">
         <article class="card card--stat">
-          <span class="card__label">Total investido</span>
+          <span class="card__label" data-i18n="total_invested">Total investido</span>
           <strong class="stat" id="inv-invested">—</strong>
         </article>
         <article class="card card--stat">
-          <span class="card__label">Valor atual</span>
+          <span class="card__label" data-i18n="current_value">Valor atual</span>
           <strong class="stat stat--cyan" id="inv-current">—</strong>
         </article>
         <article class="card card--stat">
-          <span class="card__label">Rendimento</span>
+          <span class="card__label" data-i18n="return_label">Rendimento</span>
           <strong class="stat stat--green" id="inv-return">—</strong>
           <span class="card__hint" id="inv-return-pct">—</span>
         </article>
@@ -154,8 +155,8 @@
 
         <article class="card card--activity">
           <div class="card__head">
-            <span class="card__label">Meus investimentos</span>
-            <button class="btn btn--small" id="add-investment">+ Investimento</button>
+            <span class="card__label" data-i18n="my_investments">Meus investimentos</span>
+            <button class="btn btn--small" id="add-investment" data-i18n="add_investment">+ Investimento</button>
           </div>
           <ul class="activity" id="inv-list"></ul>
         </article>
@@ -166,7 +167,7 @@
     <section class="view view--history" data-view="history" hidden>
       <article class="card">
         <div class="card__head">
-          <span class="card__label">Gastos por mês</span>
+          <span class="card__label" data-i18n="spending_by_month">Gastos por mês</span>
         </div>
         <div class="barchart" id="barchart"></div>
       </article>
@@ -183,8 +184,8 @@
     <section class="view view--categories" data-view="categories" hidden>
       <article class="card">
         <div class="card__head">
-          <span class="card__label">Suas categorias</span>
-          <button class="btn btn--small" id="add-category">+ Categoria</button>
+          <span class="card__label" data-i18n="your_categories">Suas categorias</span>
+          <button class="btn btn--small" id="add-category" data-i18n="add_category">+ Categoria</button>
         </div>
         <ul class="catlist" id="catlist"></ul>
       </article>
@@ -196,8 +197,8 @@
     <div class="modal__backdrop" data-close></div>
     <div class="modal__sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal__head">
-        <h2 class="modal__title" id="modal-title">Título</h2>
-        <button class="iconbtn" data-close aria-label="Fechar">
+        <h2 class="modal__title" id="modal-title">—</h2>
+        <button class="iconbtn" data-close aria-label="Fechar" data-i18n-aria="close">
           <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
       </div>
