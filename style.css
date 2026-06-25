@@ -13,7 +13,7 @@
   --font-display:'Bricolage Grotesque',system-ui,sans-serif;
   --font-body:'Inter',system-ui,-apple-system,sans-serif;
   --radius:22px; --radius-sm:14px; --shadow:0 24px 60px -28px rgba(0,0,0,0.7);
-  --glow-opacity:0.3; --glow-blur:120px;
+  --glow-opacity:0.3; --glow-blur:80px;
 }
 
 /* ----------------------------- BASE ----------------------------- */
@@ -239,5 +239,15 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
   .card { padding:20px; }
   .field__row { grid-template-columns:1fr; }
   .rowbtn { opacity:.85; }
+
+  /* --- iOS: evita crash/tela-preta no zoom: sem filtros pesados no mobile --- */
+  .aurora__blob { filter:none; }                 /* gradientes radiais já são suaves */
+  .card { backdrop-filter:none; background:rgba(22,18,31,0.94); }
+  .auth__card { backdrop-filter:none; background:rgba(22,18,31,0.96); }
+  .modal__backdrop, .confirm__backdrop { backdrop-filter:none; background:rgba(5,3,9,0.85); }
+
+  /* --- linhas de aporte/saque: empilha o tipo em cima pra não espremer --- */
+  .modal-row:has(.row-kind) { grid-template-columns:1fr 1fr auto; }
+  .modal-row:has(.row-kind) .row-kind { grid-column:1 / -1; }
 }
 @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
