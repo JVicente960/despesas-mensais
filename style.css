@@ -183,7 +183,7 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .empty { color:var(--text-faint); font-size:14px; padding:24px 0; text-align:center; }
 
 .barchart { display:flex; align-items:flex-end; gap:14px; height:240px; padding-top:14px; }
-.bar { flex:1; display:flex; flex-direction:column; align-items:center; gap:10px; height:100%; justify-content:flex-end; cursor:pointer; }
+.bar { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:10px; height:100%; justify-content:flex-end; cursor:pointer; }
 .bar__fill { width:100%; max-width:54px; border-radius:8px 8px 4px 4px; background:linear-gradient(180deg,#c04dff,#6a4bff); transition:filter .2s ease; min-height:4px; }
 .bar:hover .bar__fill { filter:brightness(1.15); }
 .bar.is-active .bar__fill { background:linear-gradient(180deg,#ff2d78,#c04dff); }
@@ -242,6 +242,9 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
   .card { padding:20px; }
   .field__row { grid-template-columns:1fr; }
   .rowbtn { opacity:.85; }
+  .barchart { gap:8px; }
+  .bar__value { font-size:11px; }
+  .bar__label { font-size:11px; }
 
   /* --- linhas de aporte/saque: empilha o tipo em cima pra não espremer --- */
   .modal-row:has(.row-kind) { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto; }
