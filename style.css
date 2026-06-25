@@ -23,7 +23,7 @@ html,body { height:100%; }
 body {
   margin:0; font-family:var(--font-body); color:var(--text); background:var(--bg);
   background-image:radial-gradient(120% 80% at 50% -10%,var(--bg-2),var(--bg) 60%);
-  min-height:100vh; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
 }
 button { font-family:inherit; }
 ::selection { background:rgba(192,77,255,0.4); }
@@ -80,9 +80,11 @@ button { font-family:inherit; }
 .field__label { display:block; font-size:13px; color:var(--text-dim); margin-bottom:7px; }
 .field__hint { font-size:12px; color:var(--text-faint); margin:-8px 0 14px; }
 .field__input, .field select, .row-date, .row-amount, .row-kind {
-  width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border-strong);
+  width:100%; min-width:0; padding:12px 14px; border-radius:12px; border:1px solid var(--border-strong);
   background:rgba(0,0,0,0.25); color:var(--text); font-size:15px; font-family:inherit;
 }
+/* iOS: o input de data tem largura mínima nativa; isto deixa o navegador encolher */
+.row-date { -webkit-appearance:none; appearance:none; color-scheme:dark; }
 .field__input:focus, .field select:focus, .row-date:focus, .row-amount:focus, .row-kind:focus {
   outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(192,77,255,0.22);
 }
@@ -100,9 +102,9 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .rowhead { display:flex; align-items:center; justify-content:space-between; }
 
 /* linha de lançamento / movimentação */
-.modal-row { display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:center; }
+.modal-row { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto; gap:8px; margin-bottom:8px; align-items:center; }
 .modal-row .row-kind { grid-column:auto; }
-.modal-row:has(.row-kind) { grid-template-columns:auto 1fr 1fr auto; }
+.modal-row:has(.row-kind) { grid-template-columns:minmax(0,auto) minmax(0,1.2fr) minmax(0,1fr) auto; }
 .row-del { border:none; background:var(--surface-2); color:var(--text-faint); width:38px; height:42px; border-radius:10px; cursor:pointer; line-height:0; display:grid; place-items:center; }
 .row-del:hover { color:var(--danger); }
 
@@ -154,7 +156,7 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .histnav .iconbtn { width:36px; height:36px; }
 
 /* ----------------------------- GRÁFICOS / LISTAS ----------------------------- */
-.donut { position:relative; width:280px; height:280px; }
+.donut { position:relative; width:280px; max-width:100%; aspect-ratio:1; height:auto; }
 .donut svg { width:100%; height:100%; transform:rotate(-90deg); }
 .donut__center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 .donut__caption { font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--text-dim); font-weight:600; }
@@ -232,7 +234,7 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
   .monthnav__label { font-size:18px; }
   .tabs { width:100%; overflow-x:auto; }
   .stat-row { grid-template-columns:1fr; }
-  .donut { width:240px; height:240px; }
+  .donut { width:min(240px, 72vw); height:auto; }
   .donut__value { font-size:34px; }
   .stat { font-size:38px; }
   .legend { gap:10px 18px; }
@@ -247,7 +249,7 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
   .modal__backdrop, .confirm__backdrop { backdrop-filter:none; background:rgba(5,3,9,0.85); }
 
   /* --- linhas de aporte/saque: empilha o tipo em cima pra não espremer --- */
-  .modal-row:has(.row-kind) { grid-template-columns:1fr 1fr auto; }
+  .modal-row:has(.row-kind) { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto; }
   .modal-row:has(.row-kind) .row-kind { grid-column:1 / -1; }
 }
 @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
