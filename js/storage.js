@@ -56,56 +56,13 @@
     ];
   }
 
-  /* ----------------- dados iniciais (seed) -------------------------- */
-  function seedExpenses() {
-    var now = new Date();
-    function iso(m, day) { return new Date(now.getFullYear(), now.getMonth() - m, day).toISOString().slice(0, 10); }
-    function exp(merchant, catId, entries) {
-      return { id: uid(), merchant: merchant, categoryId: catId,
-        entries: entries.map(function (e) { return { id: uid(), date: iso(e[0], e[1]), amount: e[2] }; }) };
-    }
-    return [
-      exp('Aluguel', 'cat-moradia', [[0,5,1650],[1,5,1650],[2,5,1650]]),
-      exp('Supermercado', 'cat-alimento', [[0,8,320],[1,8,300],[2,8,330]]),
-      exp('Padaria', 'cat-alimento', [[0,20,25],[0,21,20]]),
-      exp('iFood', 'cat-alimento', [[0,14,95]]),
-      exp('Restaurante', 'cat-alimento', [[0,18,130]]),
-      exp('Combustível', 'cat-transp', [[0,6,220],[1,6,200],[2,6,200]]),
-      exp('Uber', 'cat-transp', [[0,12,70]]),
-      exp('Transporte público', 'cat-transp', [[0,2,50]]),
-      exp('Amazon', 'cat-compras', [[0,9,210]]),
-      exp('Roupas', 'cat-compras', [[0,16,200]]),
-      exp('Farmácia', 'cat-saude', [[0,7,80],[1,7,90],[2,7,90]]),
-      exp('Academia', 'cat-saude', [[0,1,120]]),
-      exp('Consulta', 'cat-saude', [[0,15,50]]),
-      exp('Energia', 'cat-contas', [[0,10,130],[1,10,140],[2,10,150]]),
-      exp('Internet', 'cat-contas', [[0,10,100],[1,10,100],[2,10,100]]),
-      exp('Celular', 'cat-contas', [[0,10,50],[1,10,50],[2,10,50]]),
-      exp('Netflix', 'cat-lazer', [[0,3,55],[1,3,55],[2,3,55]]),
-      exp('Spotify', 'cat-lazer', [[0,3,35],[1,3,35],[2,3,35]]),
-      exp('Cinema', 'cat-lazer', [[0,17,60]]),
-      exp('Steam', 'cat-lazer', [[0,19,40]]),
-      exp('Presente', 'cat-outros', [[0,11,240]]),
-      exp('Pet shop', 'cat-outros', [[0,13,200]])
-    ];
-  }
-
-  function seedInvestments() {
-    function d(m) { var x = new Date(); return new Date(x.getFullYear(), x.getMonth() - m, 10).toISOString().slice(0, 10); }
-    return [
-      { id: uid(), name: 'Tesouro Selic 2029', type: 'Renda Fixa', color: '#00d6b4', current: 5350, movements: [{ id: uid(), kind: 'aporte', date: d(6), amount: 5000 }] },
-      { id: uid(), name: 'PETR4',  type: 'Ações',  color: '#3366ff', current: 3280, movements: [{ id: uid(), kind: 'aporte', date: d(4), amount: 3000 }] },
-      { id: uid(), name: 'MXRF11', type: 'FII',    color: '#b94dff', current: 2090, movements: [{ id: uid(), kind: 'aporte', date: d(3), amount: 2000 }] },
-      { id: uid(), name: 'Bitcoin',type: 'Cripto', color: '#ff2d78', current: 1820, movements: [{ id: uid(), kind: 'aporte', date: d(5), amount: 1500 }] }
-    ];
-  }
-
+  /* ----------------- dados iniciais (usuário novo começa limpo) ----- */
   function freshUserData() {
     return {
-      budget: 5000, currency: 'BRL', monthBudgets: {},
+      budget: 5000, currency: 'BRL', lang: null, monthBudgets: {},
       categories: defaultCategories(),
-      expenses: seedExpenses(),
-      investments: seedInvestments()
+      expenses: [],
+      investments: []
     };
   }
 
