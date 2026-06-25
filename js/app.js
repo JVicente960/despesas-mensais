@@ -8,10 +8,152 @@
   /* ============================ ESTADO ============================ */
   var data = null;
   var view = new Date();
+  var lang = 'pt';
   var $ = function (id) { return document.getElementById(id); };
 
-  var MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var MONTHS_SHORT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  /* ============================ IDIOMAS =========================== */
+  var LANGS = ['pt', 'en', 'es'];
+  var LANG_NAMES = { pt: 'Português', en: 'English', es: 'Español' };
+  var LOCALE = { pt: 'pt-BR', en: 'en-US', es: 'es-ES' };
+
+  var I18N = {
+    pt: {
+      app_title: 'Aurora · Controle de despesas',
+      login_title: 'Entrar', register_title: 'Criar conta',
+      login_sub: 'Acesse seu painel de despesas.', register_sub: 'Comece a controlar seus gastos.',
+      login_btn: 'Entrar', register_btn: 'Criar conta',
+      no_account: 'Não tem conta?', have_account: 'Já tem conta?',
+      user_label: 'Usuário', pass_label: 'Senha',
+      load_error: 'Não foi possível carregar seus dados.',
+      menu_budget: 'Definir orçamento', menu_currency: 'Moeda', menu_language: 'Idioma', menu_logout: 'Sair',
+      prev_month: 'Mês anterior', next_month: 'Próximo mês', select_month: 'Escolher mês', account_menu: 'Menu da conta', close: 'Fechar',
+      tab_overview: 'Visão geral', tab_investments: 'Investimentos', tab_history: 'Histórico', tab_categories: 'Categorias',
+      available: 'Disponível', daily_avg: 'Média diária', recent_activity: 'Atividade recente',
+      add_expense: '+ Despesa', edit_categories: 'Editar categorias',
+      donut_spent: 'GASTO', of_amount: 'de {x}', pct_of_budget: '{n}% do orçamento', days_count: 'em {n} dias',
+      entries_count: '{n} lançamentos', no_expenses_cta: 'Nenhuma despesa. Toque em "+ Despesa".', no_expenses_month: 'Nenhuma despesa neste mês.',
+      total_invested: 'Total investido', current_value: 'Valor atual', return_label: 'Rendimento',
+      my_investments: 'Meus investimentos', add_investment: '+ Investimento',
+      portfolio: 'CARTEIRA', assets_count: '{n} ativos', applied: 'aplicado', no_investments: 'Nenhum investimento cadastrado.',
+      spending_by_month: 'Gastos por mês', details_prefix: 'Detalhes · ', month_details: 'Detalhes do mês', no_expenses_hist: 'Sem despesas neste mês.',
+      your_categories: 'Suas categorias', add_category: '+ Categoria', total_suffix: '{x} no total',
+      cancel: 'Cancelar', save: 'Salvar', remove: 'Remover', ok: 'OK', add_more: '+ Adicionar',
+      f_description: 'Descrição', f_category: 'Categoria', f_entries: 'Lançamentos', f_name: 'Nome', f_type: 'Tipo',
+      f_current: 'Valor atual', f_movements: 'Aportes / saques', f_color: 'Cor',
+      kind_deposit: 'Aporte', kind_withdraw: 'Saque',
+      f_budget: 'Valor do orçamento', budget_all: 'Usar como padrão para todos os meses', budget_hint: 'Desmarcado, o valor vale só para este mês.',
+      new_expense: 'Nova despesa', edit_expense: 'Editar despesa',
+      new_investment: 'Novo investimento', edit_investment: 'Editar investimento',
+      new_category: 'Nova categoria', edit_category: 'Editar categoria',
+      budget_prefix: 'Orçamento · ', currency_title: 'Escolher moeda', language_title: 'Escolher idioma',
+      need_entry: 'Adicione ao menos um lançamento com valor.', need_deposit: 'Adicione ao menos um aporte.',
+      keep_one_cat: 'Mantenha ao menos uma categoria.',
+      del_expense: 'Remover a despesa "{x}" e todos os seus lançamentos?',
+      del_investment: 'Remover o investimento "{x}"?',
+      del_category: 'Remover a categoria "{x}"? As despesas dela vão para outra categoria.',
+      ph_expense: 'Ex.: Padaria', ph_investment: 'Ex.: Tesouro Selic', ph_category: 'Ex.: Educação',
+      def_expense: 'Despesa', def_investment: 'Investimento', def_category: 'Categoria', no_category: 'Sem categoria',
+      remove_entry: 'Remover lançamento', remove_label: 'Remover', edit_label: 'Editar',
+      inv_fixed: 'Renda Fixa', inv_stocks: 'Ações', inv_fii: 'FII', inv_crypto: 'Cripto', inv_funds: 'Fundos', inv_treasury: 'Tesouro', inv_pension: 'Previdência', inv_other: 'Outros'
+    },
+    en: {
+      app_title: 'Aurora · Expense tracker',
+      login_title: 'Sign in', register_title: 'Create account',
+      login_sub: 'Access your expense dashboard.', register_sub: 'Start tracking your spending.',
+      login_btn: 'Sign in', register_btn: 'Create account',
+      no_account: "Don't have an account?", have_account: 'Already have an account?',
+      user_label: 'Username', pass_label: 'Password',
+      load_error: "Couldn't load your data.",
+      menu_budget: 'Set budget', menu_currency: 'Currency', menu_language: 'Language', menu_logout: 'Log out',
+      prev_month: 'Previous month', next_month: 'Next month', select_month: 'Choose month', account_menu: 'Account menu', close: 'Close',
+      tab_overview: 'Overview', tab_investments: 'Investments', tab_history: 'History', tab_categories: 'Categories',
+      available: 'Available', daily_avg: 'Daily average', recent_activity: 'Recent activity',
+      add_expense: '+ Expense', edit_categories: 'Edit categories',
+      donut_spent: 'SPENT', of_amount: 'of {x}', pct_of_budget: '{n}% of budget', days_count: 'in {n} days',
+      entries_count: '{n} entries', no_expenses_cta: 'No expenses. Tap "+ Expense".', no_expenses_month: 'No expenses this month.',
+      total_invested: 'Total invested', current_value: 'Current value', return_label: 'Return',
+      my_investments: 'My investments', add_investment: '+ Investment',
+      portfolio: 'PORTFOLIO', assets_count: '{n} assets', applied: 'invested', no_investments: 'No investments yet.',
+      spending_by_month: 'Spending by month', details_prefix: 'Details · ', month_details: 'Month details', no_expenses_hist: 'No expenses this month.',
+      your_categories: 'Your categories', add_category: '+ Category', total_suffix: '{x} total',
+      cancel: 'Cancel', save: 'Save', remove: 'Remove', ok: 'OK', add_more: '+ Add',
+      f_description: 'Description', f_category: 'Category', f_entries: 'Entries', f_name: 'Name', f_type: 'Type',
+      f_current: 'Current value', f_movements: 'Deposits / withdrawals', f_color: 'Color',
+      kind_deposit: 'Deposit', kind_withdraw: 'Withdrawal',
+      f_budget: 'Budget amount', budget_all: 'Use as default for all months', budget_hint: 'Unchecked, the value applies to this month only.',
+      new_expense: 'New expense', edit_expense: 'Edit expense',
+      new_investment: 'New investment', edit_investment: 'Edit investment',
+      new_category: 'New category', edit_category: 'Edit category',
+      budget_prefix: 'Budget · ', currency_title: 'Choose currency', language_title: 'Choose language',
+      need_entry: 'Add at least one entry with an amount.', need_deposit: 'Add at least one deposit.',
+      keep_one_cat: 'Keep at least one category.',
+      del_expense: 'Remove the expense "{x}" and all its entries?',
+      del_investment: 'Remove the investment "{x}"?',
+      del_category: 'Remove the category "{x}"? Its expenses will move to another category.',
+      ph_expense: 'e.g. Bakery', ph_investment: 'e.g. Treasury bond', ph_category: 'e.g. Education',
+      def_expense: 'Expense', def_investment: 'Investment', def_category: 'Category', no_category: 'No category',
+      remove_entry: 'Remove entry', remove_label: 'Remove', edit_label: 'Edit',
+      inv_fixed: 'Fixed income', inv_stocks: 'Stocks', inv_fii: 'REIT', inv_crypto: 'Crypto', inv_funds: 'Funds', inv_treasury: 'Treasury', inv_pension: 'Pension', inv_other: 'Other'
+    },
+    es: {
+      app_title: 'Aurora · Control de gastos',
+      login_title: 'Iniciar sesión', register_title: 'Crear cuenta',
+      login_sub: 'Accede a tu panel de gastos.', register_sub: 'Empieza a controlar tus gastos.',
+      login_btn: 'Iniciar sesión', register_btn: 'Crear cuenta',
+      no_account: '¿No tienes cuenta?', have_account: '¿Ya tienes cuenta?',
+      user_label: 'Usuario', pass_label: 'Contraseña',
+      load_error: 'No se pudieron cargar tus datos.',
+      menu_budget: 'Definir presupuesto', menu_currency: 'Moneda', menu_language: 'Idioma', menu_logout: 'Salir',
+      prev_month: 'Mes anterior', next_month: 'Mes siguiente', select_month: 'Elegir mes', account_menu: 'Menú de la cuenta', close: 'Cerrar',
+      tab_overview: 'Resumen', tab_investments: 'Inversiones', tab_history: 'Historial', tab_categories: 'Categorías',
+      available: 'Disponible', daily_avg: 'Promedio diario', recent_activity: 'Actividad reciente',
+      add_expense: '+ Gasto', edit_categories: 'Editar categorías',
+      donut_spent: 'GASTO', of_amount: 'de {x}', pct_of_budget: '{n}% del presupuesto', days_count: 'en {n} días',
+      entries_count: '{n} movimientos', no_expenses_cta: 'Sin gastos. Toca "+ Gasto".', no_expenses_month: 'Sin gastos este mes.',
+      total_invested: 'Total invertido', current_value: 'Valor actual', return_label: 'Rendimiento',
+      my_investments: 'Mis inversiones', add_investment: '+ Inversión',
+      portfolio: 'CARTERA', assets_count: '{n} activos', applied: 'invertido', no_investments: 'Sin inversiones.',
+      spending_by_month: 'Gastos por mes', details_prefix: 'Detalles · ', month_details: 'Detalles del mes', no_expenses_hist: 'Sin gastos este mes.',
+      your_categories: 'Tus categorías', add_category: '+ Categoría', total_suffix: '{x} en total',
+      cancel: 'Cancelar', save: 'Guardar', remove: 'Eliminar', ok: 'OK', add_more: '+ Añadir',
+      f_description: 'Descripción', f_category: 'Categoría', f_entries: 'Movimientos', f_name: 'Nombre', f_type: 'Tipo',
+      f_current: 'Valor actual', f_movements: 'Aportes / retiros', f_color: 'Color',
+      kind_deposit: 'Aporte', kind_withdraw: 'Retiro',
+      f_budget: 'Monto del presupuesto', budget_all: 'Usar como predeterminado para todos los meses', budget_hint: 'Sin marcar, el valor aplica solo a este mes.',
+      new_expense: 'Nuevo gasto', edit_expense: 'Editar gasto',
+      new_investment: 'Nueva inversión', edit_investment: 'Editar inversión',
+      new_category: 'Nueva categoría', edit_category: 'Editar categoría',
+      budget_prefix: 'Presupuesto · ', currency_title: 'Elegir moneda', language_title: 'Elegir idioma',
+      need_entry: 'Añade al menos un movimiento con valor.', need_deposit: 'Añade al menos un aporte.',
+      keep_one_cat: 'Mantén al menos una categoría.',
+      del_expense: '¿Eliminar el gasto "{x}" y todos sus movimientos?',
+      del_investment: '¿Eliminar la inversión "{x}"?',
+      del_category: '¿Eliminar la categoría "{x}"? Sus gastos pasarán a otra categoría.',
+      ph_expense: 'Ej.: Panadería', ph_investment: 'Ej.: Bono del tesoro', ph_category: 'Ej.: Educación',
+      def_expense: 'Gasto', def_investment: 'Inversión', def_category: 'Categoría', no_category: 'Sin categoría',
+      remove_entry: 'Eliminar movimiento', remove_label: 'Eliminar', edit_label: 'Editar',
+      inv_fixed: 'Renta fija', inv_stocks: 'Acciones', inv_fii: 'FII', inv_crypto: 'Cripto', inv_funds: 'Fondos', inv_treasury: 'Tesoro', inv_pension: 'Pensión', inv_other: 'Otros'
+    }
+  };
+
+  function tr(key, params) {
+    var s = (I18N[lang] && I18N[lang][key]);
+    if (s == null) s = I18N.pt[key];
+    if (s == null) s = key;
+    if (params) for (var k in params) s = s.replace('{' + k + '}', params[k]);
+    return s;
+  }
+  function detectLang() {
+    var l = (navigator.language || 'pt').slice(0, 2).toLowerCase();
+    return LANGS.indexOf(l) >= 0 ? l : 'pt';
+  }
+  function applyStaticI18n() {
+    document.documentElement.lang = LOCALE[lang];
+    document.title = tr('app_title');
+    document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = tr(el.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-i18n-ph]').forEach(function (el) { el.setAttribute('placeholder', tr(el.getAttribute('data-i18n-ph'))); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { el.setAttribute('aria-label', tr(el.getAttribute('data-i18n-aria'))); });
+  }
 
   // Paleta de cores (19 opções) para categorias e investimentos
   var SWATCHES = [
@@ -19,7 +161,23 @@
     '#f43f9d','#7c3aed','#4f46e5','#0284c7','#06b6d4','#10b981','#84cc16','#f59e0b','#dc2626'
   ];
 
-  var INV_TYPES = ['Renda Fixa','Ações','FII','Cripto','Fundos','Tesouro','Previdência','Outros'];
+  function invTypes() {
+    return ['inv_fixed','inv_stocks','inv_fii','inv_crypto','inv_funds','inv_treasury','inv_pension','inv_other']
+      .map(function (k) { return tr(k); });
+  }
+
+  // moedas disponíveis no seletor
+  var CURRENCIES = ['BRL','USD','EUR','GBP','JPY','CHF','CAD','AUD','ARS','MXN','CNY','INR'];
+  function currencyName(code) {
+    try { return new Intl.DisplayNames([LOCALE[lang]], { type: 'currency' }).of(code); } catch (e) { return code; }
+  }
+  function currencySymbol(code) {
+    try {
+      var parts = new Intl.NumberFormat(LOCALE[lang], { style: 'currency', currency: code, maximumFractionDigits: 0 }).formatToParts(0);
+      for (var i = 0; i < parts.length; i++) if (parts[i].type === 'currency') return parts[i].value;
+    } catch (e) {}
+    return code;
+  }
 
   // ícones reutilizáveis (svg)
   var ICON_EDIT = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 20h4l10-10-4-4L4 16v4zM14 6l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -29,16 +187,22 @@
   function money(n, opts) {
     opts = opts || {};
     var cur = (data && data.currency) || 'BRL';
-    var locale = cur === 'BRL' ? 'pt-BR' : 'en-US';
-    return new Intl.NumberFormat(locale, {
+    return new Intl.NumberFormat(LOCALE[lang], {
       style: 'currency', currency: cur,
       minimumFractionDigits: opts.cents ? 2 : 0,
       maximumFractionDigits: opts.cents ? 2 : 0
     }).format(n || 0);
   }
 
+  function monthName(i, short) {
+    var s = new Intl.DateTimeFormat(LOCALE[lang], { month: short ? 'short' : 'long' }).format(new Date(2021, i, 1)).replace('.', '');
+    if (short) return s.toLowerCase();
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function monthLabel(d) { return monthName(d.getMonth()) + ' ' + d.getFullYear(); }
+
   function monthKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
-  function shortDate(iso) { var p = iso.split('-'); return Number(p[2]) + ' ' + MONTHS_SHORT[Number(p[1]) - 1]; }
+  function shortDate(iso) { var p = iso.split('-'); return Number(p[2]) + ' ' + monthName(Number(p[1]) - 1, true); }
   function todayStr() { return new Date().toISOString().slice(0, 10); }
   function viewDateStr() {
     var last = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
@@ -47,7 +211,7 @@
   }
 
   function catById(id) {
-    return data.categories.find(function (c) { return c.id === id; }) || { name: 'Sem categoria', color: '#888' };
+    return data.categories.find(function (c) { return c.id === id; }) || { name: tr('no_category'), color: '#888' };
   }
   function budgetFor(d) {
     var k = monthKey(d);
@@ -111,11 +275,11 @@
     switchBtn.addEventListener('click', function () {
       authMode = authMode === 'login' ? 'register' : 'login';
       var login = authMode === 'login';
-      $('auth-title').textContent = login ? 'Entrar' : 'Criar conta';
-      $('auth-subtitle').textContent = login ? 'Acesse seu painel de despesas.' : 'Comece a controlar seus gastos.';
-      $('auth-submit').textContent = login ? 'Entrar' : 'Criar conta';
-      $('auth-switch-text').textContent = login ? 'Não tem conta?' : 'Já tem conta?';
-      switchBtn.textContent = login ? 'Criar conta' : 'Entrar';
+      $('auth-title').textContent = login ? tr('login_title') : tr('register_title');
+      $('auth-subtitle').textContent = login ? tr('login_sub') : tr('register_sub');
+      $('auth-submit').textContent = login ? tr('login_btn') : tr('register_btn');
+      $('auth-switch-text').textContent = login ? tr('no_account') : tr('have_account');
+      switchBtn.textContent = login ? tr('register_btn') : tr('login_btn');
       $('auth-error').textContent = '';
     });
 
@@ -140,9 +304,10 @@
     catch (e) {
       await Store.logout();
       $('app').hidden = true; $('auth-screen').hidden = false;
-      $('auth-error').textContent = e.message || 'Não foi possível carregar seus dados.';
+      $('auth-error').textContent = e.message || tr('load_error');
       return;
     }
+    lang = (data.lang && LANGS.indexOf(data.lang) >= 0) ? data.lang : detectLang();
     view = new Date();
     $('auth-screen').hidden = true;
     $('app').hidden = false;
@@ -150,13 +315,14 @@
     var user = Store.currentUser();
     $('avatar-initials').textContent = user.slice(0, 2).toUpperCase();
     $('menu-username').textContent = user;
-    updateCurrencyLabel();
+    applyStaticI18n();
+    updateMenuLabels();
     injectHistoryControls();
     renderAll();
   }
 
   function renderAll() {
-    $('month-label').textContent = MONTHS[view.getMonth()] + ' ' + view.getFullYear();
+    $('month-label').textContent = monthLabel(view);
     renderOverview();
     renderInvestments();
     renderHistory();
@@ -188,9 +354,9 @@
     var nav = document.createElement('div');
     nav.className = 'histnav';
     nav.innerHTML =
-      '<button class="iconbtn" id="hist-prev" aria-label="Mês anterior"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-      '<input type="month" id="hist-month" class="histnav__input" aria-label="Escolher mês">' +
-      '<button class="iconbtn" id="hist-next" aria-label="Próximo mês"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+      '<button class="iconbtn" id="hist-prev" aria-label="' + tr('prev_month') + '"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '<input type="month" id="hist-month" class="histnav__input" aria-label="' + tr('select_month') + '">' +
+      '<button class="iconbtn" id="hist-next" aria-label="' + tr('next_month') + '"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
     head.appendChild(nav);
 
     $('hist-prev').addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderAll(); });
@@ -211,44 +377,44 @@
 
     Charts.donut($('donut'),
       totals.map(function (x) { return { value: x.total, color: x.cat.color }; }),
-      { caption: 'GASTO', value: money(spent), sub: 'de ' + money(budget) });
+      { caption: tr('donut_spent'), value: money(spent), sub: tr('of_amount', { x: money(budget) }) });
 
     $('legend').innerHTML = totals.map(function (x) {
       return '<div class="legend__item">' +
         '<span class="legend__dot" style="background:' + x.cat.color + '"></span>' +
         '<span class="legend__name">' + escapeHtml(x.cat.name) + '</span>' +
         '<span class="legend__value">' + money(x.total) + '</span></div>';
-    }).join('') || '<p class="empty">Nenhuma despesa neste mês.</p>';
+    }).join('') || '<p class="empty">' + tr('no_expenses_month') + '</p>';
 
     $('stat-left').textContent = money(left);
     $('stat-left').className = 'stat ' + (left >= 0 ? 'stat--green' : '');
     $('stat-left').style.color = left < 0 ? '#ff6b8a' : '';
     var pctLeft = budget > 0 ? Math.round((left / budget) * 100) : 0;
-    $('stat-left-hint').textContent = pctLeft + '% do orçamento';
+    $('stat-left-hint').textContent = tr('pct_of_budget', { n: pctLeft });
 
     var today = new Date();
     var sameMonth = view.getMonth() === today.getMonth() && view.getFullYear() === today.getFullYear();
     var daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
     var days = sameMonth ? today.getDate() : daysInMonth;
     $('stat-daily').textContent = money(spent / days);
-    $('stat-daily-hint').textContent = 'em ' + days + ' dias';
+    $('stat-daily-hint').textContent = tr('days_count', { n: days });
 
     var groups = monthGroups(view);
     $('activity').innerHTML = groups.map(function (g) {
       var c = catById(g.exp.categoryId);
-      var meta = g.entries.length > 1
-        ? c.name + ' · ' + g.entries.length + ' lançamentos'
-        : c.name + ' · ' + shortDate(g.entries[0].date);
+      var multi = g.entries.length > 1;
+      var dateOrCount = multi ? tr('entries_count', { n: g.entries.length }) : shortDate(g.entries[0].date);
       return '<li class="activity__item">' +
         '<span class="activity__dot" style="background:' + c.color + '"></span>' +
         '<div class="activity__info">' +
           '<span class="activity__title">' + escapeHtml(g.exp.merchant) + '</span>' +
-          '<span class="activity__meta">' + escapeHtml(meta) + '</span></div>' +
+          '<span class="activity__meta">' + escapeHtml(c.name) + '</span>' +
+          '<span class="activity__date">' + escapeHtml(dateOrCount) + '</span></div>' +
         '<span class="activity__amount">-' + money(g.total, { cents: true }) + '</span>' +
-        '<button class="rowbtn rowbtn--edit" data-edit-exp="' + g.exp.id + '" aria-label="Editar">' + ICON_EDIT + '</button>' +
-        '<button class="rowbtn rowbtn--del" data-del-exp="' + g.exp.id + '" aria-label="Remover">' + ICON_DEL + '</button>' +
+        '<button class="rowbtn rowbtn--edit" data-edit-exp="' + g.exp.id + '" aria-label="' + tr('edit_label') + '">' + ICON_EDIT + '</button>' +
+        '<button class="rowbtn rowbtn--del" data-del-exp="' + g.exp.id + '" aria-label="' + tr('remove_label') + '">' + ICON_DEL + '</button>' +
       '</li>';
-    }).join('') || '<p class="empty">Nenhuma despesa. Toque em “+ Despesa”.</p>';
+    }).join('') || '<p class="empty">' + tr('no_expenses_cta') + '</p>';
   }
 
   /* ======================= INVESTIMENTOS ======================== */
@@ -268,7 +434,7 @@
 
     Charts.donut($('inv-donut'),
       inv.map(function (x) { return { value: x.current, color: x.color }; }),
-      { caption: 'CARTEIRA', value: money(current), sub: inv.length + ' ativos' });
+      { caption: tr('portfolio'), value: money(current), sub: tr('assets_count', { n: inv.length }) });
 
     $('inv-legend').innerHTML = inv.map(function (x) {
       return '<div class="legend__item">' +
@@ -285,12 +451,12 @@
         '<span class="activity__dot" style="background:' + x.color + '"></span>' +
         '<div class="activity__info">' +
           '<span class="activity__title">' + escapeHtml(x.name) + '</span>' +
-          '<span class="activity__meta">' + escapeHtml(x.type) + ' · aplicado ' + money(ap) + '</span></div>' +
+          '<span class="activity__meta">' + escapeHtml(x.type) + ' · ' + tr('applied') + ' ' + money(ap) + '</span></div>' +
         '<span class="activity__amount ' + (r >= 0 ? 'is-positive' : 'is-negative') + '">' + (r >= 0 ? '+' : '') + rp.toFixed(1) + '%</span>' +
-        '<button class="rowbtn rowbtn--edit" data-edit-inv="' + x.id + '" aria-label="Editar">' + ICON_EDIT + '</button>' +
-        '<button class="rowbtn rowbtn--del" data-del-inv="' + x.id + '" aria-label="Remover">' + ICON_DEL + '</button>' +
+        '<button class="rowbtn rowbtn--edit" data-edit-inv="' + x.id + '" aria-label="' + tr('edit_label') + '">' + ICON_EDIT + '</button>' +
+        '<button class="rowbtn rowbtn--del" data-del-inv="' + x.id + '" aria-label="' + tr('remove_label') + '">' + ICON_DEL + '</button>' +
       '</li>';
-    }).join('') || '<p class="empty">Nenhum investimento cadastrado.</p>';
+    }).join('') || '<p class="empty">' + tr('no_investments') + '</p>';
   }
 
   /* ========================= HISTÓRICO ========================== */
@@ -301,24 +467,22 @@
     for (var i = 5; i >= 0; i--) {
       var d = new Date(view.getFullYear(), view.getMonth() - i, 1);
       var total = categoryTotals(d).reduce(function (s, x) { return s + x.total; }, 0);
-      series.push({ label: MONTHS_SHORT[d.getMonth()], value: total, active: i === 0, date: d });
+      series.push({ label: monthName(d.getMonth(), true), value: total, active: i === 0, date: d });
     }
     Charts.bars($('barchart'), series, function (v) {
-      var cur = (data && data.currency) || 'BRL';
-      var loc = cur === 'BRL' ? 'pt-BR' : 'en-US';
-      return new Intl.NumberFormat(loc, { maximumFractionDigits: 0 }).format(v || 0);
+      return new Intl.NumberFormat(LOCALE[lang], { maximumFractionDigits: 0 }).format(v || 0);
     }, function (idx) {
       view = new Date(series[idx].date); renderAll();
     });
 
-    $('history-month-label').textContent = 'Detalhes · ' + MONTHS[view.getMonth()] + ' ' + view.getFullYear();
+    $('history-month-label').textContent = tr('details_prefix') + monthLabel(view);
     var totals = categoryTotals(view);
     $('history-breakdown').innerHTML = totals.map(function (x) {
       return '<li class="activity__item">' +
         '<span class="activity__dot" style="background:' + x.cat.color + '"></span>' +
         '<div class="activity__info"><span class="activity__title">' + escapeHtml(x.cat.name) + '</span></div>' +
         '<span class="activity__amount">' + money(x.total) + '</span></li>';
-    }).join('') || '<p class="empty">Sem despesas neste mês.</p>';
+    }).join('') || '<p class="empty">' + tr('no_expenses_hist') + '</p>';
   }
 
   /* ========================= CATEGORIAS ========================= */
@@ -331,9 +495,9 @@
       return '<li class="catlist__item">' +
         '<span class="catlist__dot" style="background:' + c.color + '"></span>' +
         '<span class="catlist__name">' + escapeHtml(c.name) + '</span>' +
-        '<span class="catlist__total">' + money(allTotals[c.id] || 0) + ' no total</span>' +
-        '<button class="rowbtn rowbtn--edit" data-edit-cat="' + c.id + '" aria-label="Editar">' + ICON_EDIT + '</button>' +
-        '<button class="rowbtn rowbtn--del" data-del-cat="' + c.id + '" aria-label="Remover">' + ICON_DEL + '</button>' +
+        '<span class="catlist__total">' + tr('total_suffix', { x: money(allTotals[c.id] || 0) }) + '</span>' +
+        '<button class="rowbtn rowbtn--edit" data-edit-cat="' + c.id + '" aria-label="' + tr('edit_label') + '">' + ICON_EDIT + '</button>' +
+        '<button class="rowbtn rowbtn--del" data-del-cat="' + c.id + '" aria-label="' + tr('remove_label') + '">' + ICON_DEL + '</button>' +
       '</li>';
     }).join('');
   }
@@ -345,8 +509,8 @@
     $('modal-title').textContent = title;
     $('modal-form').innerHTML = bodyHtml +
       '<div class="modal__actions">' +
-        '<button type="button" class="btn" data-close>Cancelar</button>' +
-        '<button type="submit" class="btn btn--primary">Salvar</button>' +
+        '<button type="button" class="btn" data-close>' + tr('cancel') + '</button>' +
+        '<button type="submit" class="btn btn--primary">' + tr('save') + '</button>' +
       '</div>';
     modalSubmit = onSubmit;
     $('modal').hidden = false;
@@ -358,7 +522,6 @@
 
   function enhanceModalForm() {
     var form = $('modal-form');
-    // seletor de cor
     var swatches = form.querySelectorAll('.swatch');
     swatches.forEach(function (sw) {
       sw.onclick = function () {
@@ -367,7 +530,6 @@
         form.dataset.color = sw.dataset.color;
       };
     });
-    // adicionar lançamento / movimentação
     var addEntry = form.querySelector('#entry-add');
     if (addEntry) addEntry.onclick = function () {
       form.querySelector('#entry-list').insertAdjacentHTML('beforeend', entryRow(viewDateStr(), ''));
@@ -384,25 +546,28 @@
     }).join('');
   }
   function typeOptions(sel) {
-    return INV_TYPES.map(function (t) { return '<option' + (t === sel ? ' selected' : '') + '>' + t + '</option>'; }).join('');
+    var list = invTypes();
+    if (sel && list.indexOf(sel) < 0) list = [sel].concat(list);
+    return list.map(function (ty) { return '<option' + (ty === sel ? ' selected' : '') + '>' + escapeHtml(ty) + '</option>'; }).join('');
   }
   function swatchesHtml(sel) {
     return '<div class="swatches">' + SWATCHES.map(function (c) {
       return '<span class="swatch' + (c === sel ? ' is-selected' : '') + '" data-color="' + c + '" style="background:' + c + '"></span>';
     }).join('') + '</div>';
   }
+
   function entryRow(date, amount) {
     return '<div class="modal-row">' +
       '<input type="date" class="row-date" value="' + (date || '') + '">' +
       '<input type="number" step="0.01" min="0" class="row-amount" placeholder="0,00" value="' + (amount != null ? amount : '') + '">' +
-      '<button type="button" class="row-del" aria-label="Remover lançamento">' + ICON_DEL + '</button></div>';
+      '<button type="button" class="row-del" aria-label="' + tr('remove_entry') + '">' + ICON_DEL + '</button></div>';
   }
   function movRow(kind, date, amount) {
     return '<div class="modal-row">' +
-      '<select class="row-kind"><option value="aporte"' + (kind !== 'saque' ? ' selected' : '') + '>Aporte</option><option value="saque"' + (kind === 'saque' ? ' selected' : '') + '>Saque</option></select>' +
+      '<select class="row-kind"><option value="aporte"' + (kind !== 'saque' ? ' selected' : '') + '>' + tr('kind_deposit') + '</option><option value="saque"' + (kind === 'saque' ? ' selected' : '') + '>' + tr('kind_withdraw') + '</option></select>' +
       '<input type="date" class="row-date" value="' + (date || '') + '">' +
       '<input type="number" step="0.01" min="0" class="row-amount" placeholder="0,00" value="' + (amount != null ? amount : '') + '">' +
-      '<button type="button" class="row-del" aria-label="Remover">' + ICON_DEL + '</button></div>';
+      '<button type="button" class="row-del" aria-label="' + tr('remove_label') + '">' + ICON_DEL + '</button></div>';
   }
   function readEntries(form) {
     return Array.prototype.map.call(form.querySelectorAll('#entry-list .modal-row'), function (r) {
@@ -420,28 +585,33 @@
   /* ---- Despesa (criar/editar) ---- */
   function openExpense(exp) {
     var editing = !!exp;
+    var monthOf = monthKey(view);
+    // Só os lançamentos do mês visível aparecem no modal (os outros meses ficam preservados)
+    var visible = editing ? exp.entries.filter(function (e) { return e.date.slice(0, 7) === monthOf; }) : [];
     var sel = editing ? exp.categoryId : data.categories[0].id;
-    var rows = editing
-      ? exp.entries.map(function (e) { return entryRow(e.date, e.amount); }).join('')
+    var rows = (editing && visible.length)
+      ? visible.map(function (e) { return entryRow(e.date, e.amount); }).join('')
       : entryRow(viewDateStr(), '');
 
-    openModal(editing ? 'Editar despesa' : 'Nova despesa',
-      '<label class="field"><span class="field__label">Descrição</span>' +
-        '<input class="field__input" name="merchant" required placeholder="Ex.: Padaria" value="' + (editing ? escapeHtml(exp.merchant) : '') + '"></label>' +
-      '<label class="field"><span class="field__label">Categoria</span><select name="categoryId">' + categoryOptions(sel) + '</select></label>' +
-      '<div class="field"><div class="field__label rowhead"><span>Lançamentos</span>' +
-        '<button type="button" class="link" id="entry-add">+ Adicionar</button></div>' +
+    openModal(editing ? tr('edit_expense') : tr('new_expense'),
+      '<label class="field"><span class="field__label">' + tr('f_description') + '</span>' +
+        '<input class="field__input" name="merchant" required placeholder="' + tr('ph_expense') + '" value="' + (editing ? escapeHtml(exp.merchant) : '') + '"></label>' +
+      '<label class="field"><span class="field__label">' + tr('f_category') + '</span><select name="categoryId">' + categoryOptions(sel) + '</select></label>' +
+      '<div class="field"><div class="field__label rowhead"><span>' + tr('f_entries') + '</span>' +
+        '<button type="button" class="link" id="entry-add">' + tr('add_more') + '</button></div>' +
         '<div id="entry-list">' + rows + '</div></div>',
       function (form) {
-        var entries = readEntries(form);
-        if (!entries.length) { alert('Adicione ao menos um lançamento com valor.'); return false; }
-        var merchant = form.merchant.value.trim() || 'Despesa';
-        var categoryId = form.categoryId.value;
-        if (editing) { exp.merchant = merchant; exp.categoryId = categoryId; exp.entries = entries; }
-        else { data.expenses.push({ id: Store.uid(), merchant: merchant, categoryId: categoryId, entries: entries }); }
+        var formEntries = readEntries(form);
+        var others = editing ? exp.entries.filter(function (e) { return e.date.slice(0, 7) !== monthOf; }) : [];
+        if (!formEntries.length && !others.length) { alert(tr('need_entry')); return false; }
+        var merchant = form.elements.merchant.value.trim() || tr('def_expense');
+        var categoryId = form.elements.categoryId.value;
+        var allEntries = others.concat(formEntries);
+        if (editing) { exp.merchant = merchant; exp.categoryId = categoryId; exp.entries = allEntries; }
+        else { data.expenses.push({ id: Store.uid(), merchant: merchant, categoryId: categoryId, entries: allEntries }); }
         save();
-        var latest = entries.map(function (e) { return e.date; }).sort().pop();
-        view = new Date(Number(latest.slice(0, 4)), Number(latest.slice(5, 7)) - 1, 1);
+        var latest = allEntries.map(function (e) { return e.date; }).sort().pop();
+        if (latest) view = new Date(Number(latest.slice(0, 4)), Number(latest.slice(5, 7)) - 1, 1);
         renderAll();
       });
   }
@@ -449,7 +619,7 @@
   async function deleteExpense(id) {
     var exp = data.expenses.find(function (e) { return e.id === id; });
     if (!exp) return;
-    if (!(await confirmDialog('Remover a despesa "' + exp.merchant + '" e todos os seus lançamentos?'))) return;
+    if (!(await confirmDialog(tr('del_expense', { x: exp.merchant })))) return;
     data.expenses = data.expenses.filter(function (e) { return e.id !== id; });
     save(); renderAll();
   }
@@ -461,26 +631,26 @@
       ? inv.movements.map(function (m) { return movRow(m.kind, m.date, m.amount); }).join('')
       : movRow('aporte', todayStr(), '');
 
-    openModal(editing ? 'Editar investimento' : 'Novo investimento',
-      '<label class="field"><span class="field__label">Nome</span>' +
-        '<input class="field__input" name="name" required placeholder="Ex.: Tesouro Selic" value="' + (editing ? escapeHtml(inv.name) : '') + '"></label>' +
+    openModal(editing ? tr('edit_investment') : tr('new_investment'),
+      '<label class="field"><span class="field__label">' + tr('f_name') + '</span>' +
+        '<input class="field__input" name="name" required placeholder="' + tr('ph_investment') + '" value="' + (editing ? escapeHtml(inv.name) : '') + '"></label>' +
       '<div class="field__row">' +
-        '<label class="field"><span class="field__label">Tipo</span><select name="type">' + typeOptions(editing ? inv.type : 'Renda Fixa') + '</select></label>' +
-        '<label class="field"><span class="field__label">Valor atual</span>' +
+        '<label class="field"><span class="field__label">' + tr('f_type') + '</span><select name="type">' + typeOptions(editing ? inv.type : tr('inv_fixed')) + '</select></label>' +
+        '<label class="field"><span class="field__label">' + tr('f_current') + '</span>' +
           '<input class="field__input" name="current" type="number" step="0.01" min="0" placeholder="0,00" value="' + (editing ? inv.current : '') + '"></label>' +
       '</div>' +
-      '<div class="field"><div class="field__label rowhead"><span>Aportes / saques</span>' +
-        '<button type="button" class="link" id="mov-add">+ Adicionar</button></div>' +
+      '<div class="field"><div class="field__label rowhead"><span>' + tr('f_movements') + '</span>' +
+        '<button type="button" class="link" id="mov-add">' + tr('add_more') + '</button></div>' +
         '<div id="mov-list">' + rows + '</div></div>' +
-      '<div class="field"><span class="field__label">Cor</span>' + swatchesHtml(editing ? inv.color : SWATCHES[4]) + '</div>',
+      '<div class="field"><span class="field__label">' + tr('f_color') + '</span>' + swatchesHtml(editing ? inv.color : SWATCHES[4]) + '</div>',
       function (form) {
         var movements = readMovs(form);
-        if (!movements.length) { alert('Adicione ao menos um aporte.'); return false; }
-        var name = form.name.value.trim() || 'Investimento';
-        var type = form.type.value;
+        if (!movements.length) { alert(tr('need_deposit')); return false; }
+        var name = form.elements.name.value.trim() || tr('def_investment');
+        var type = form.elements.type.value;
         var color = form.dataset.color || (editing ? inv.color : SWATCHES[4]);
         var net = movements.reduce(function (s, m) { return s + (m.kind === 'saque' ? -m.amount : m.amount); }, 0);
-        var current = form.current.value ? Math.abs(parseFloat(form.current.value)) : net;
+        var current = form.elements.current.value ? Math.abs(parseFloat(form.elements.current.value)) : net;
         if (editing) { inv.name = name; inv.type = type; inv.color = color; inv.movements = movements; inv.current = current; }
         else { data.investments.push({ id: Store.uid(), name: name, type: type, color: color, current: current, movements: movements }); }
         save(); renderInvestments();
@@ -491,7 +661,7 @@
   async function deleteInvestment(id) {
     var inv = data.investments.find(function (x) { return x.id === id; });
     if (!inv) return;
-    if (!(await confirmDialog('Remover o investimento "' + inv.name + '"?'))) return;
+    if (!(await confirmDialog(tr('del_investment', { x: inv.name })))) return;
     data.investments = data.investments.filter(function (x) { return x.id !== id; });
     save(); renderInvestments();
   }
@@ -499,13 +669,13 @@
   /* ---- Categoria (criar/editar/remover) ---- */
   function openCategory(cat) {
     var editing = !!cat;
-    openModal(editing ? 'Editar categoria' : 'Nova categoria',
-      '<label class="field"><span class="field__label">Nome</span>' +
-        '<input class="field__input" name="name" required placeholder="Ex.: Educação" value="' + (editing ? escapeHtml(cat.name) : '') + '"></label>' +
-      '<div class="field"><span class="field__label">Cor</span>' + swatchesHtml(editing ? cat.color : SWATCHES[0]) + '</div>',
+    openModal(editing ? tr('edit_category') : tr('new_category'),
+      '<label class="field"><span class="field__label">' + tr('f_name') + '</span>' +
+        '<input class="field__input" name="name" required placeholder="' + tr('ph_category') + '" value="' + (editing ? escapeHtml(cat.name) : '') + '"></label>' +
+      '<div class="field"><span class="field__label">' + tr('f_color') + '</span>' + swatchesHtml(editing ? cat.color : SWATCHES[0]) + '</div>',
       function (form) {
         var color = form.dataset.color || (editing ? cat.color : SWATCHES[0]);
-        var name = form.name.value.trim() || 'Categoria';
+        var name = form.elements.name.value.trim() || tr('def_category');
         if (editing) { cat.name = name; cat.color = color; }
         else { data.categories.push({ id: 'cat-' + Store.uid(), name: name, color: color }); }
         save(); renderAll();
@@ -514,10 +684,10 @@
   }
 
   async function deleteCategory(id) {
-    if (data.categories.length <= 1) { await confirmDialog('Mantenha ao menos uma categoria.', true); return; }
+    if (data.categories.length <= 1) { await confirmDialog(tr('keep_one_cat'), true); return; }
     var cat = catById(id);
-    if (!(await confirmDialog('Remover a categoria "' + cat.name + '"? As despesas dela vão para outra categoria.'))) return;
-    var fallback = data.categories.find(function (c) { return c.id !== id && /outros/i.test(c.name); })
+    if (!(await confirmDialog(tr('del_category', { x: cat.name })))) return;
+    var fallback = data.categories.find(function (c) { return c.id !== id && /outros|other|otros/i.test(c.name); })
                 || data.categories.find(function (c) { return c.id !== id; });
     data.expenses.forEach(function (exp) { if (exp.categoryId === id) exp.categoryId = fallback.id; });
     data.categories = data.categories.filter(function (c) { return c.id !== id; });
@@ -528,17 +698,41 @@
   function openBudget() {
     var k = monthKey(view);
     var isDefault = data.monthBudgets[k] == null;
-    openModal('Orçamento · ' + MONTHS[view.getMonth()] + ' ' + view.getFullYear(),
-      '<label class="field"><span class="field__label">Valor do orçamento</span>' +
+    openModal(tr('budget_prefix') + monthLabel(view),
+      '<label class="field"><span class="field__label">' + tr('f_budget') + '</span>' +
         '<input class="field__input" name="budget" type="number" step="0.01" min="0" required value="' + budgetFor(view) + '"></label>' +
       '<label class="check"><input type="checkbox" name="allmonths"' + (isDefault ? ' checked' : '') + '>' +
-        '<span>Usar como padrão para todos os meses</span></label>' +
-      '<p class="field__hint">Desmarcado, o valor vale só para este mês.</p>',
+        '<span>' + tr('budget_all') + '</span></label>' +
+      '<p class="field__hint">' + tr('budget_hint') + '</p>',
       function (form) {
-        var val = Math.abs(parseFloat(form.budget.value) || 0);
-        if (form.allmonths.checked) { data.budget = val; delete data.monthBudgets[k]; }
+        var val = Math.abs(parseFloat(form.elements.budget.value) || 0);
+        if (form.elements.allmonths.checked) { data.budget = val; delete data.monthBudgets[k]; }
         else { data.monthBudgets[k] = val; }
         save(); renderOverview();
+      });
+  }
+
+  /* ---- Moeda ---- */
+  function openCurrency() {
+    var opts = CURRENCIES.map(function (c) {
+      var label = c + ' — ' + currencyName(c) + ' (' + currencySymbol(c) + ')';
+      return '<option value="' + c + '"' + (c === data.currency ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+    }).join('');
+    openModal(tr('currency_title'),
+      '<label class="field"><span class="field__label">' + tr('menu_currency') + '</span><select name="currency">' + opts + '</select></label>',
+      function (form) { data.currency = form.elements.currency.value; save(); updateMenuLabels(); renderAll(); });
+  }
+
+  /* ---- Idioma ---- */
+  function openLanguage() {
+    var opts = LANGS.map(function (l) {
+      return '<option value="' + l + '"' + (l === lang ? ' selected' : '') + '>' + LANG_NAMES[l] + '</option>';
+    }).join('');
+    openModal(tr('language_title'),
+      '<label class="field"><span class="field__label">' + tr('menu_language') + '</span><select name="lang">' + opts + '</select></label>',
+      function (form) {
+        lang = form.elements.lang.value; data.lang = lang;
+        save(); applyStaticI18n(); updateMenuLabels(); renderAll();
       });
   }
 
@@ -552,8 +746,8 @@
         '<div class="confirm__box" role="alertdialog">' +
           '<p class="confirm__msg">' + escapeHtml(message) + '</p>' +
           '<div class="confirm__actions">' +
-            (alertOnly ? '' : '<button class="btn" data-no>Cancelar</button>') +
-            '<button class="btn ' + (alertOnly ? 'btn--primary' : 'btn--danger') + '" data-yes>' + (alertOnly ? 'OK' : 'Remover') + '</button>' +
+            (alertOnly ? '' : '<button class="btn" data-no>' + tr('cancel') + '</button>') +
+            '<button class="btn ' + (alertOnly ? 'btn--primary' : 'btn--danger') + '" data-yes>' + (alertOnly ? tr('ok') : tr('remove')) + '</button>' +
           '</div></div>';
       document.body.appendChild(el);
       function done(v) { el.remove(); resolve(v); }
@@ -570,23 +764,19 @@
     $('add-category').addEventListener('click', function () { openCategory(null); });
     $('edit-categories').addEventListener('click', function () { switchView('categories'); });
 
-    // submit do modal
     $('modal-form').addEventListener('submit', function (e) {
       e.preventDefault();
       if (!modalSubmit) return;
       var keepOpen = modalSubmit($('modal-form'));
       if (keepOpen !== false) closeModal();
     });
-    // remover linha de lançamento/movimentação (delegado, registrado uma vez)
     $('modal-form').addEventListener('click', function (e) {
       var del = e.target.closest('.row-del');
       if (del) { e.preventDefault(); del.closest('.modal-row').remove(); }
     });
-    // fechar modal
     $('modal').addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeModal(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
 
-    // ações nas listas (editar/remover) — delegado
     document.addEventListener('click', function (e) {
       var t;
       if ((t = e.target.closest('[data-edit-exp]'))) { var ex = data.expenses.find(function (x) { return x.id === t.dataset.editExp; }); if (ex) openExpense(ex); return; }
@@ -597,17 +787,14 @@
       if ((t = e.target.closest('[data-del-cat]')))  { deleteCategory(t.dataset.delCat); return; }
     });
 
-    // menu da conta
     var avatar = $('avatar-btn'), menu = $('account-menu');
     avatar.addEventListener('click', function (e) { if (e.target.closest('.menu')) return; menu.hidden = !menu.hidden; });
     avatar.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); menu.hidden = !menu.hidden; } });
     document.addEventListener('click', function (e) { if (!e.target.closest('.avatar')) menu.hidden = true; });
 
     $('menu-budget').addEventListener('click', function () { menu.hidden = true; openBudget(); });
-    $('menu-currency').addEventListener('click', function () {
-      data.currency = data.currency === 'BRL' ? 'USD' : 'BRL';
-      save(); updateCurrencyLabel(); renderAll(); menu.hidden = true;
-    });
+    $('menu-currency').addEventListener('click', function () { menu.hidden = true; openCurrency(); });
+    $('menu-language').addEventListener('click', function () { menu.hidden = true; openLanguage(); });
     $('menu-logout').addEventListener('click', function () {
       Store.logout(); data = null;
       $('app').hidden = true; $('auth-screen').hidden = false;
@@ -615,8 +802,9 @@
     });
   }
 
-  function updateCurrencyLabel() {
-    $('menu-currency').textContent = 'Moeda: ' + (data.currency === 'BRL' ? 'R$' : 'US$');
+  function updateMenuLabels() {
+    $('menu-currency').textContent = tr('menu_currency') + ' · ' + data.currency;
+    $('menu-language').textContent = tr('menu_language') + ' · ' + LANG_NAMES[lang];
   }
 
   /* ============================ BOOT ============================ */
@@ -625,7 +813,7 @@
     setupNav();
     setupEvents();
     if (Store.currentUser()) startApp();
-    else $('auth-screen').hidden = false;
+    else { lang = detectLang(); applyStaticI18n(); $('auth-screen').hidden = false; }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
