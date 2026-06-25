@@ -177,6 +177,7 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .activity__info { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .activity__title { font-weight:700; font-size:16px; }
 .activity__meta { font-size:13px; color:var(--text-faint); }
+.activity__date { font-size:13px; color:var(--text-faint); }
 .activity__amount { margin-left:auto; font-family:var(--font-display); font-weight:700; font-size:17px; white-space:nowrap; }
 .activity__amount.is-positive { color:var(--green); }
 .activity__amount.is-negative { color:var(--danger); }
