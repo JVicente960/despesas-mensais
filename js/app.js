@@ -158,7 +158,7 @@
   // Paleta de cores (19 opções) para categorias e investimentos
   var SWATCHES = [
     '#ff2d78','#b94dff','#8257ff','#3366ff','#19b9ff','#00d6b4','#2fdd76','#c2ee2e','#ff9f1c','#ff5f6d',
-    '#f43f9d','#7c3aed','#4f46e5','#0284c7','#06b6d4','#10b981','#84cc16','#f59e0b','#dc2626'
+    '#f43f9d','#4f46e5','#dc2626'
   ];
 
   function invTypes() {
