@@ -303,7 +303,11 @@
       var total = categoryTotals(d).reduce(function (s, x) { return s + x.total; }, 0);
       series.push({ label: MONTHS_SHORT[d.getMonth()], value: total, active: i === 0, date: d });
     }
-    Charts.bars($('barchart'), series, function (v) { return money(v); }, function (idx) {
+    Charts.bars($('barchart'), series, function (v) {
+      var cur = (data && data.currency) || 'BRL';
+      var loc = cur === 'BRL' ? 'pt-BR' : 'en-US';
+      return new Intl.NumberFormat(loc, { maximumFractionDigits: 0 }).format(v || 0);
+    }, function (idx) {
       view = new Date(series[idx].date); renderAll();
     });
 
