@@ -170,7 +170,7 @@
   }
 
   // moedas disponíveis no seletor
-  var CURRENCIES = ['BRL','USD','EUR','GBP','JPY','CHF','CAD','AUD','ARS','MXN','CNY','INR'];
+  var CURRENCIES = ['BRL','USD','EUR','GBP','JPY','CHF','CAD','AUD','ARS','MXN','CNY','INR','IDR'];
   function currencyName(code) {
     try { return new Intl.DisplayNames([LOCALE[lang]], { type: 'currency' }).of(code); } catch (e) { return code; }
   }
