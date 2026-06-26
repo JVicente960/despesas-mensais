@@ -124,6 +124,15 @@
       } catch (e) { return { ok: false, error: e.message }; }
     },
 
+    async loginWithGoogle(credential) {
+      try {
+        var res = await api('POST', '/api/auth/google', { credential: credential });
+        localStorage.setItem(KEYS.token, res.token);
+        localStorage.setItem(KEYS.user, res.username);
+        return { ok: true };
+      } catch (e) { return { ok: false, error: e.message }; }
+    },
+
     async logout() {
       try { await api('POST', '/api/logout'); } catch (e) {}
       localStorage.removeItem(KEYS.token);
