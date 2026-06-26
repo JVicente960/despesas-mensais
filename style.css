@@ -117,6 +117,9 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .auth__error { color:var(--danger); font-size:14px; min-height:18px; margin:2px 0 12px; }
 .auth__switch { margin-top:20px; text-align:center; color:var(--text-dim); font-size:14px; }
 .auth__switch .link { margin-left:6px; }
+.auth__divider { display:flex; align-items:center; gap:12px; margin:20px 0 16px; color:var(--text-faint); font-size:13px; }
+.auth__divider::before, .auth__divider::after { content:""; flex:1; height:1px; background:var(--border-strong); }
+.auth__google { display:flex; justify-content:center; min-height:44px; color-scheme:light; }
 
 /* ----------------------------- APP ----------------------------- */
 .app { position:relative; z-index:1; max-width:1320px; margin:0 auto;
