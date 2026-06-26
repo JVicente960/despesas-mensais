@@ -11,6 +11,9 @@
   var lang = 'pt';
   var $ = function (id) { return document.getElementById(id); };
 
+  // Client ID do Google (público). Mesmo valor configurado no backend.
+  var GOOGLE_CLIENT_ID = '528000890824-kgndiholp2r5kq91f1hsn4i4ls2jddia.apps.googleusercontent.com';
+
   /* ============================ IDIOMAS =========================== */
   var LANGS = ['pt', 'en', 'es'];
   var LANG_NAMES = { pt: 'Português', en: 'English', es: 'Español' };
@@ -22,7 +25,7 @@
       login_title: 'Entrar', register_title: 'Criar conta',
       login_sub: 'Acesse seu painel de despesas.', register_sub: 'Comece a controlar seus gastos.',
       login_btn: 'Entrar', register_btn: 'Criar conta',
-      no_account: 'Não tem conta?', have_account: 'Já tem conta?',
+      no_account: 'Não tem conta?', have_account: 'Já tem conta?', or: 'ou',
       user_label: 'Usuário', pass_label: 'Senha',
       load_error: 'Não foi possível carregar seus dados.',
       menu_budget: 'Definir orçamento', menu_currency: 'Moeda', menu_language: 'Idioma', menu_logout: 'Sair',
@@ -61,7 +64,7 @@
       login_title: 'Sign in', register_title: 'Create account',
       login_sub: 'Access your expense dashboard.', register_sub: 'Start tracking your spending.',
       login_btn: 'Sign in', register_btn: 'Create account',
-      no_account: "Don't have an account?", have_account: 'Already have an account?',
+      no_account: "Don't have an account?", have_account: 'Already have an account?', or: 'or',
       user_label: 'Username', pass_label: 'Password',
       load_error: "Couldn't load your data.",
       menu_budget: 'Set budget', menu_currency: 'Currency', menu_language: 'Language', menu_logout: 'Log out',
@@ -100,7 +103,7 @@
       login_title: 'Iniciar sesión', register_title: 'Crear cuenta',
       login_sub: 'Accede a tu panel de gastos.', register_sub: 'Empieza a controlar tus gastos.',
       login_btn: 'Iniciar sesión', register_btn: 'Crear cuenta',
-      no_account: '¿No tienes cuenta?', have_account: '¿Ya tienes cuenta?',
+      no_account: '¿No tienes cuenta?', have_account: '¿Ya tienes cuenta?', or: 'o',
       user_label: 'Usuario', pass_label: 'Contraseña',
       load_error: 'No se pudieron cargar tus datos.',
       menu_budget: 'Definir presupuesto', menu_currency: 'Moneda', menu_language: 'Idioma', menu_logout: 'Salir',
@@ -158,7 +161,7 @@
   // Paleta de cores (19 opções) para categorias e investimentos
   var SWATCHES = [
     '#ff2d78','#b94dff','#8257ff','#3366ff','#19b9ff','#00d6b4','#2fdd76','#c2ee2e','#ff9f1c','#ff5f6d',
-    '#f43f9d','#4f46e5','#dc2626'
+    '#f43f9d','#7c3aed','#4f46e5','#0284c7','#06b6d4','#10b981','#84cc16','#f59e0b','#dc2626'
   ];
 
   function invTypes() {
@@ -167,7 +170,7 @@
   }
 
   // moedas disponíveis no seletor
-  var CURRENCIES = ['BRL','USD','EUR','GBP','JPY','CHF','CAD','AUD','ARS','MXN','CNY','INR','IDR'];
+  var CURRENCIES = ['BRL','USD','EUR','GBP','JPY','CHF','CAD','AUD','ARS','MXN','CNY','INR'];
   function currencyName(code) {
     try { return new Intl.DisplayNames([LOCALE[lang]], { type: 'currency' }).of(code); } catch (e) { return code; }
   }
@@ -295,6 +298,32 @@
       }
       await startApp();
       $('auth-submit').disabled = false;
+    });
+  }
+
+  /* ---------------------- Login com Google ---------------------- */
+  async function onGoogleCredential(resp) {
+    if (!resp || !resp.credential) return;
+    $('auth-error').textContent = '';
+    var r = await Store.loginWithGoogle(resp.credential);
+    if (!r.ok) { $('auth-error').textContent = r.error; return; }
+    await startApp();
+  }
+
+  function setupGoogle(tries) {
+    tries = tries || 0;
+    var el = $('google-btn');
+    if (!el) return;
+    if (!(window.google && window.google.accounts && window.google.accounts.id)) {
+      if (tries < 25) setTimeout(function () { setupGoogle(tries + 1); }, 300); // espera o script async carregar
+      return;
+    }
+    if (el.dataset.ready) return;
+    el.dataset.ready = '1';
+    window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential });
+    window.google.accounts.id.renderButton(el, {
+      theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with',
+      width: 280, locale: LOCALE[lang]
     });
   }
 
@@ -813,7 +842,7 @@
     setupNav();
     setupEvents();
     if (Store.currentUser()) startApp();
-    else { lang = detectLang(); applyStaticI18n(); $('auth-screen').hidden = false; }
+    else { lang = detectLang(); applyStaticI18n(); setupGoogle(); $('auth-screen').hidden = false; }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
