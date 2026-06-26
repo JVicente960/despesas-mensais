@@ -7,10 +7,16 @@
 -- =====================================================================
 
 CREATE TABLE IF NOT EXISTS users (
-  username TEXT PRIMARY KEY,
-  salt     TEXT NOT NULL,
-  hash     TEXT NOT NULL
+  username   TEXT PRIMARY KEY,
+  salt       TEXT NOT NULL,
+  hash       TEXT NOT NULL,
+  google_sub TEXT,
+  email      TEXT
 );
+
+-- Garante no máximo uma conta por identidade do Google
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_sub
+  ON users(google_sub) WHERE google_sub IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS sessions (
   token      TEXT PRIMARY KEY,
