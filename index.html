@@ -12,6 +12,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Google Identity Services (botão "Entrar com Google") -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 
 <body>
@@ -51,6 +54,9 @@
         <span id="auth-switch-text" data-i18n="no_account">Não tem conta?</span>
         <button class="link" id="auth-switch-btn" type="button" data-i18n="register_btn">Criar conta</button>
       </p>
+
+      <div class="auth__divider"><span data-i18n="or">ou</span></div>
+      <div id="google-btn" class="auth__google"></div>
     </section>
   </main>
 
