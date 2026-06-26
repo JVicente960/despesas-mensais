@@ -17,6 +17,9 @@
 
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 60; // sessão válida por 60 dias
 
+// Client ID do Google (público, pode ficar no código). Usado pra conferir o "aud" do token.
+const GOOGLE_CLIENT_ID = '528000890824-kgndiholp2r5kq91f1hsn4i4ls2jddia.apps.googleusercontent.com';
+
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -40,6 +43,69 @@ function safeEqual(a, b) {
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
+}
+
+/* ----------- validação do token de identidade do Google (RS256) ----------- */
+function b64urlToBytes(s) {
+  s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+function b64urlToJson(s) { return JSON.parse(new TextDecoder().decode(b64urlToBytes(s))); }
+
+// chaves públicas do Google (JWKS), com cache de 1h em memória do isolate
+let _googleKeys = { keys: null, exp: 0 };
+async function fetchGoogleKeys() {
+  const now = Date.now();
+  if (_googleKeys.keys && _googleKeys.exp > now) return _googleKeys.keys;
+  const res = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+  if (!res.ok) throw new Error('Falha ao obter chaves do Google.');
+  const data = await res.json();
+  _googleKeys = { keys: data.keys, exp: now + 60 * 60 * 1000 };
+  return data.keys;
+}
+
+// Verifica assinatura + claims. Lança erro se algo não bater. Retorna o payload.
+export async function verifyGoogleIdToken(idToken, clientId, keyProvider) {
+  keyProvider = keyProvider || fetchGoogleKeys;
+  const parts = String(idToken).split('.');
+  if (parts.length !== 3) throw new Error('Formato de token inválido.');
+  const header = b64urlToJson(parts[0]);
+  const payload = b64urlToJson(parts[1]);
+  if (header.alg !== 'RS256') throw new Error('Algoritmo inesperado.');
+
+  const keys = await keyProvider();
+  const jwk = keys.find((k) => k.kid === header.kid);
+  if (!jwk) throw new Error('Chave de assinatura não encontrada.');
+
+  const key = await crypto.subtle.importKey(
+    'jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']
+  );
+  const signed = new TextEncoder().encode(parts[0] + '.' + parts[1]);
+  const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64urlToBytes(parts[2]), signed);
+  if (!ok) throw new Error('Assinatura inválida.');
+
+  if (payload.iss !== 'accounts.google.com' && payload.iss !== 'https://accounts.google.com')
+    throw new Error('Emissor inválido.');
+  if (payload.aud !== clientId) throw new Error('Audiência inválida.');
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.exp && payload.exp < now - 60) throw new Error('Token expirado.');
+  if (!payload.sub) throw new Error('Identificador ausente.');
+  if (payload.email && payload.email_verified === false) throw new Error('E-mail não verificado.');
+  return payload;
+}
+
+// Garante um username único (usado ao criar conta via Google a partir do e-mail)
+async function uniqueUsername(env, base) {
+  base = (base || 'user').trim() || 'user';
+  let candidate = base, n = 1;
+  while (await env.DB.prepare('SELECT 1 FROM users WHERE username = ?').bind(candidate).first()) {
+    n += 1; candidate = base + '-' + n;
+  }
+  return candidate;
 }
 
 async function userFromToken(env, request) {
@@ -93,6 +159,36 @@ export async function onRequest(context) {
       await env.DB.prepare('INSERT INTO sessions (token, username, created_at) VALUES (?, ?, ?)')
         .bind(token, u, Date.now()).run();
       return json({ token, username: u });
+    }
+
+    /* ---- login com Google ---- */
+    if (route === 'auth/google' && method === 'POST') {
+      const { credential } = await request.json();
+      if (!credential) return json({ error: 'Credencial ausente.' }, 400);
+
+      let payload;
+      try { payload = await verifyGoogleIdToken(credential, GOOGLE_CLIENT_ID); }
+      catch (e) { return json({ error: 'Login Google inválido.' }, 401); }
+
+      const sub = payload.sub;
+      const email = (payload.email || '').toLowerCase();
+
+      // já existe conta ligada a esse Google?
+      const existing = await env.DB.prepare('SELECT username FROM users WHERE google_sub = ?').bind(sub).first();
+      let username;
+      if (existing) {
+        username = existing.username;
+      } else {
+        username = await uniqueUsername(env, email || ('google_' + sub.slice(0, 8)));
+        // salt/hash vazios: conta Google não tem login por senha
+        await env.DB.prepare('INSERT INTO users (username, salt, hash, google_sub, email) VALUES (?, ?, ?, ?, ?)')
+          .bind(username, '', '', sub, email).run();
+      }
+
+      const token = crypto.randomUUID();
+      await env.DB.prepare('INSERT INTO sessions (token, username, created_at) VALUES (?, ?, ?)')
+        .bind(token, username, Date.now()).run();
+      return json({ token, username });
     }
 
     /* ---- logout ---- */
