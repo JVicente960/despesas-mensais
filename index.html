@@ -215,6 +215,13 @@
     </div>
   </div>
 
+  <!-- Status de salvamento (salvando / salvo / falha) -->
+  <div class="savestatus" id="save-status" role="status" aria-live="polite" hidden>
+    <span class="savestatus__icon" id="save-status-icon"></span>
+    <span class="savestatus__text" id="save-status-text"></span>
+    <button class="savestatus__retry" id="save-status-retry" type="button" hidden></button>
+  </div>
+
   <!-- Scripts separados, carregados em ordem -->
   <script src="js/storage.js"></script>
   <script src="js/charts.js"></script>
