@@ -140,6 +140,10 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .auth__legal a:hover { color:var(--text-dim); text-decoration:underline; }
 
 .exportlist { display:flex; flex-direction:column; gap:10px; margin:14px 0 4px; }
+.morebtn { display:inline-block; margin-top:8px; font-size:13px; }
+.morewrap { display:contents; }
+#pending-fixas:not(:empty) { margin-bottom:16px; }
+.card--fixas { border-color:rgba(192,77,255,0.35); }
 
 /* ----------------------- status de salvamento ----------------------- */.savestatus {
   position:fixed; left:50%; bottom:max(20px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px);
