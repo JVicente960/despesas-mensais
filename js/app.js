@@ -326,7 +326,7 @@
     window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential });
     window.google.accounts.id.renderButton(el, {
       theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with',
-      width: 280, locale: LOCALE[lang]
+      locale: LOCALE[lang]
     });
   }
 
