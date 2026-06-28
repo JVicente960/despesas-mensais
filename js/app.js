@@ -833,6 +833,10 @@
     var s = (Number(n) || 0).toFixed(2);
     return lang === 'en' ? s : s.replace('.', ',');
   }
+  function csvFrac(n) {                                  // fração p/ formatar como % na planilha (0,07 -> 7%)
+    var s = (Number(n) || 0).toFixed(4);
+    return lang === 'en' ? s : s.replace('.', ',');
+  }
   function csvCell(v, delim) {
     v = String(v == null ? '' : v);
     if (v.indexOf('"') >= 0 || v.indexOf(delim) >= 0 || v.indexOf('\n') >= 0 || v.indexOf('\r') >= 0)
@@ -861,8 +865,8 @@
     var rows = [[tr('f_name'), tr('f_type'), tr('col_invested') + ' (' + cur + ')',
       tr('current_value') + ' (' + cur + ')', tr('return_label') + ' (' + cur + ')', tr('return_label') + ' %']];
     data.investments.forEach(function (inv) {
-      var ap = investedOf(inv), ret = inv.current - ap, pct = ap > 0 ? (ret / ap * 100) : 0;
-      rows.push([inv.name, inv.type, csvNum(ap), csvNum(inv.current), csvNum(ret), csvNum(pct)]);
+      var ap = investedOf(inv), ret = inv.current - ap, frac = ap > 0 ? (ret / ap) : 0;
+      rows.push([inv.name, inv.type, csvNum(ap), csvNum(inv.current), csvNum(ret), csvFrac(frac)]);
     });
     return toCsv(rows, delim);
   }
