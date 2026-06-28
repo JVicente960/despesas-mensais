@@ -139,8 +139,9 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .auth__legal a { color:var(--text-faint); text-decoration:none; }
 .auth__legal a:hover { color:var(--text-dim); text-decoration:underline; }
 
-/* ----------------------- status de salvamento ----------------------- */
-.savestatus {
+.exportlist { display:flex; flex-direction:column; gap:10px; margin:14px 0 4px; }
+
+/* ----------------------- status de salvamento ----------------------- */.savestatus {
   position:fixed; left:50%; bottom:max(20px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px);
   display:flex; align-items:center; gap:10px;
   background:var(--panel); border:1px solid var(--border-strong); border-radius:999px;
