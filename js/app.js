@@ -29,6 +29,7 @@
       user_label: 'Usuário', pass_label: 'Senha',
       load_error: 'Não foi possível carregar seus dados.',
       menu_budget: 'Definir orçamento', menu_currency: 'Moeda', menu_language: 'Idioma', menu_logout: 'Sair',
+      menu_privacy: 'Política de privacidade', privacy: 'Privacidade',
       prev_month: 'Mês anterior', next_month: 'Próximo mês', select_month: 'Escolher mês', account_menu: 'Menu da conta', close: 'Fechar',
       tab_overview: 'Visão geral', tab_investments: 'Investimentos', tab_history: 'Histórico', tab_categories: 'Categorias',
       available: 'Disponível', daily_avg: 'Média diária', recent_activity: 'Atividade recente',
@@ -68,6 +69,7 @@
       user_label: 'Username', pass_label: 'Password',
       load_error: "Couldn't load your data.",
       menu_budget: 'Set budget', menu_currency: 'Currency', menu_language: 'Language', menu_logout: 'Log out',
+      menu_privacy: 'Privacy policy', privacy: 'Privacy',
       prev_month: 'Previous month', next_month: 'Next month', select_month: 'Choose month', account_menu: 'Account menu', close: 'Close',
       tab_overview: 'Overview', tab_investments: 'Investments', tab_history: 'History', tab_categories: 'Categories',
       available: 'Available', daily_avg: 'Daily average', recent_activity: 'Recent activity',
@@ -107,6 +109,7 @@
       user_label: 'Usuario', pass_label: 'Contraseña',
       load_error: 'No se pudieron cargar tus datos.',
       menu_budget: 'Definir presupuesto', menu_currency: 'Moneda', menu_language: 'Idioma', menu_logout: 'Salir',
+      menu_privacy: 'Política de privacidad', privacy: 'Privacidad',
       prev_month: 'Mes anterior', next_month: 'Mes siguiente', select_month: 'Elegir mes', account_menu: 'Menú de la cuenta', close: 'Cerrar',
       tab_overview: 'Resumen', tab_investments: 'Inversiones', tab_history: 'Historial', tab_categories: 'Categorías',
       available: 'Disponible', daily_avg: 'Promedio diario', recent_activity: 'Actividad reciente',
@@ -160,7 +163,8 @@
 
   // Paleta de cores (19 opções) para categorias e investimentos
   var SWATCHES = [
-    '#ff2d78','#b94dff','#8257ff','#3366ff','#19b9ff','#00d6b4','#2fdd76','#c2ee2e','#ff9f1c','#ff5f6d','#f43f9d','#4f46e5','#dc2626'
+    '#ff2d78','#b94dff','#8257ff','#3366ff','#19b9ff','#00d6b4','#2fdd76','#c2ee2e','#ff9f1c','#ff5f6d',
+    '#f43f9d','#4f46e5','#dc2626'
   ];
 
   function invTypes() {
