@@ -86,6 +86,7 @@
         <div class="menu" id="account-menu" hidden role="menu">
           <span class="menu__name" id="menu-username"></span>
           <button class="menu__item" id="menu-budget" role="menuitem" data-i18n="menu_budget">Definir orçamento</button>
+          <button class="menu__item" id="menu-fixas" role="menuitem" data-i18n="menu_fixas">Despesas fixas</button>
           <button class="menu__item" id="menu-export" role="menuitem" data-i18n="menu_export">Exportar dados</button>
           <button class="menu__item" id="menu-currency" role="menuitem">Moeda</button>
           <button class="menu__item" id="menu-language" role="menuitem">Idioma</button>
@@ -127,6 +128,8 @@
               <span class="card__hint" id="stat-daily-hint">—</span>
             </article>
           </div>
+
+          <div id="pending-fixas"></div>
 
           <article class="card card--activity">
             <div class="card__head">
