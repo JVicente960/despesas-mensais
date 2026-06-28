@@ -139,6 +139,25 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .auth__legal a { color:var(--text-faint); text-decoration:none; }
 .auth__legal a:hover { color:var(--text-dim); text-decoration:underline; }
 
+/* ----------------------- status de salvamento ----------------------- */
+.savestatus {
+  position:fixed; left:50%; bottom:max(20px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(8px);
+  display:flex; align-items:center; gap:10px;
+  background:var(--panel); border:1px solid var(--border-strong); border-radius:999px;
+  padding:9px 16px; font-size:14px; color:var(--text); box-shadow:var(--shadow);
+  z-index:60; pointer-events:none; opacity:0; transition:opacity .25s ease, transform .25s ease;
+}
+.savestatus.is-visible { opacity:1; transform:translateX(-50%) translateY(0); }
+.savestatus--saved { color:var(--green); }
+.savestatus--error { color:var(--danger); border-color:rgba(255,107,138,0.5); }
+.savestatus__icon { display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; font-weight:700; }
+.savestatus__icon.savestatus__spin { border:2px solid var(--border-strong); border-top-color:var(--primary); border-radius:50%; animation:savespin .7s linear infinite; }
+@keyframes savespin { to { transform:rotate(360deg); } }
+.savestatus__retry {
+  pointer-events:auto; cursor:pointer; background:var(--danger); color:#1a0710;
+  border:none; border-radius:999px; padding:5px 12px; font-size:13px; font-weight:600; font-family:inherit;
+}
+
 .tabs { display:flex; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:5px; margin-bottom:22px; width:fit-content; }
 .tab { border:none; background:none; color:var(--text-dim); padding:9px 18px; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s ease,color .2s ease; }
 .tab:hover { color:var(--text); }
