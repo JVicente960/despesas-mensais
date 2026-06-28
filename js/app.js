@@ -31,6 +31,10 @@
       menu_budget: 'Definir orçamento', menu_currency: 'Moeda', menu_language: 'Idioma', menu_logout: 'Sair',
       menu_privacy: 'Política de privacidade', privacy: 'Privacidade',
       saving: 'Salvando…', saved: 'Salvo', save_error: 'Falha ao salvar', retry: 'Tentar de novo',
+      menu_export: 'Exportar dados', export_title: 'Exportar dados',
+      export_desc: 'Baixe um backup completo (JSON) ou planilhas legíveis (CSV) das suas despesas e investimentos.',
+      export_backup: 'Backup completo (JSON)', export_expenses: 'Despesas (CSV)', export_investments: 'Investimentos (CSV)',
+      col_date: 'Data', col_amount: 'Valor', col_month: 'Mês', col_invested: 'Aplicado',
       prev_month: 'Mês anterior', next_month: 'Próximo mês', select_month: 'Escolher mês', account_menu: 'Menu da conta', close: 'Fechar',
       tab_overview: 'Visão geral', tab_investments: 'Investimentos', tab_history: 'Histórico', tab_categories: 'Categorias',
       available: 'Disponível', daily_avg: 'Média diária', recent_activity: 'Atividade recente',
@@ -72,6 +76,10 @@
       menu_budget: 'Set budget', menu_currency: 'Currency', menu_language: 'Language', menu_logout: 'Log out',
       menu_privacy: 'Privacy policy', privacy: 'Privacy',
       saving: 'Saving…', saved: 'Saved', save_error: "Couldn't save", retry: 'Retry',
+      menu_export: 'Export data', export_title: 'Export data',
+      export_desc: 'Download a full backup (JSON) or readable spreadsheets (CSV) of your expenses and investments.',
+      export_backup: 'Full backup (JSON)', export_expenses: 'Expenses (CSV)', export_investments: 'Investments (CSV)',
+      col_date: 'Date', col_amount: 'Amount', col_month: 'Month', col_invested: 'Invested',
       prev_month: 'Previous month', next_month: 'Next month', select_month: 'Choose month', account_menu: 'Account menu', close: 'Close',
       tab_overview: 'Overview', tab_investments: 'Investments', tab_history: 'History', tab_categories: 'Categories',
       available: 'Available', daily_avg: 'Daily average', recent_activity: 'Recent activity',
@@ -113,6 +121,10 @@
       menu_budget: 'Definir presupuesto', menu_currency: 'Moneda', menu_language: 'Idioma', menu_logout: 'Salir',
       menu_privacy: 'Política de privacidad', privacy: 'Privacidad',
       saving: 'Guardando…', saved: 'Guardado', save_error: 'No se pudo guardar', retry: 'Reintentar',
+      menu_export: 'Exportar datos', export_title: 'Exportar datos',
+      export_desc: 'Descarga una copia de seguridad completa (JSON) o planillas legibles (CSV) de tus gastos e inversiones.',
+      export_backup: 'Copia completa (JSON)', export_expenses: 'Gastos (CSV)', export_investments: 'Inversiones (CSV)',
+      col_date: 'Fecha', col_amount: 'Importe', col_month: 'Mes', col_invested: 'Aplicado',
       prev_month: 'Mes anterior', next_month: 'Mes siguiente', select_month: 'Elegir mes', account_menu: 'Menú de la cuenta', close: 'Cerrar',
       tab_overview: 'Resumen', tab_investments: 'Inversiones', tab_history: 'Historial', tab_categories: 'Categorías',
       available: 'Disponible', daily_avg: 'Promedio diario', recent_activity: 'Actividad reciente',
@@ -807,6 +819,73 @@
       });
   }
 
+  /* ---- Exportar dados (JSON backup + CSV legível) ---- */
+  function downloadFile(filename, content, mime) {
+    var blob = new Blob([content], { type: mime + ';charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function csvDelim() { return lang === 'en' ? ',' : ';'; }       // pt/es usam ; (decimal é vírgula)
+  function csvNum(n) {
+    var s = (Number(n) || 0).toFixed(2);
+    return lang === 'en' ? s : s.replace('.', ',');
+  }
+  function csvCell(v, delim) {
+    v = String(v == null ? '' : v);
+    if (v.indexOf('"') >= 0 || v.indexOf(delim) >= 0 || v.indexOf('\n') >= 0 || v.indexOf('\r') >= 0)
+      v = '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+  function toCsv(rows, delim) {
+    return '\uFEFF' + rows.map(function (r) {           // BOM p/ acentos no Excel
+      return r.map(function (c) { return csvCell(c, delim); }).join(delim);
+    }).join('\r\n');
+  }
+  function buildExpensesCsv() {
+    var delim = csvDelim(), cur = data.currency;
+    var rows = [[tr('col_date'), tr('f_description'), tr('f_category'), tr('col_amount') + ' (' + cur + ')', tr('col_month')]];
+    var flat = [];
+    data.expenses.forEach(function (exp) {
+      var cat = catById(exp.categoryId);
+      exp.entries.forEach(function (e) { flat.push({ date: e.date, merchant: exp.merchant, cat: cat.name, amount: e.amount }); });
+    });
+    flat.sort(function (a, b) { return a.date.localeCompare(b.date); });
+    flat.forEach(function (r) { rows.push([r.date, r.merchant, r.cat, csvNum(r.amount), r.date.slice(0, 7)]); });
+    return toCsv(rows, delim);
+  }
+  function buildInvestmentsCsv() {
+    var delim = csvDelim(), cur = data.currency;
+    var rows = [[tr('f_name'), tr('f_type'), tr('col_invested') + ' (' + cur + ')',
+      tr('current_value') + ' (' + cur + ')', tr('return_label') + ' (' + cur + ')', tr('return_label') + ' %']];
+    data.investments.forEach(function (inv) {
+      var ap = investedOf(inv), ret = inv.current - ap, pct = ap > 0 ? (ret / ap * 100) : 0;
+      rows.push([inv.name, inv.type, csvNum(ap), csvNum(inv.current), csvNum(ret), csvNum(pct)]);
+    });
+    return toCsv(rows, delim);
+  }
+  function exportName(kind, ext) { return 'aurora-' + kind + '-' + todayStr() + '.' + ext; }
+  function doExport(kind) {
+    if (kind === 'json') downloadFile(exportName('backup', 'json'), JSON.stringify(data, null, 2), 'application/json');
+    else if (kind === 'expenses') downloadFile(exportName('despesas', 'csv'), buildExpensesCsv(), 'text/csv');
+    else if (kind === 'investments') downloadFile(exportName('investimentos', 'csv'), buildInvestmentsCsv(), 'text/csv');
+  }
+  function openExport() {
+    $('modal-title').textContent = tr('export_title');
+    $('modal-form').innerHTML =
+      '<p class="field__hint" style="margin-top:0">' + tr('export_desc') + '</p>' +
+      '<div class="exportlist">' +
+        '<button type="button" class="btn btn--block" data-export="json">' + tr('export_backup') + '</button>' +
+        '<button type="button" class="btn btn--block" data-export="expenses">' + tr('export_expenses') + '</button>' +
+        '<button type="button" class="btn btn--block" data-export="investments">' + tr('export_investments') + '</button>' +
+      '</div>' +
+      '<div class="modal__actions"><button type="button" class="btn" data-close>' + tr('cancel') + '</button></div>';
+    modalSubmit = null;
+    $('modal').hidden = false;
+  }
+
   /* ---- Confirmação estilizada (substitui o confirm() do navegador) ---- */
   function confirmDialog(message, alertOnly) {
     return new Promise(function (resolve) {
@@ -843,7 +922,9 @@
     });
     $('modal-form').addEventListener('click', function (e) {
       var del = e.target.closest('.row-del');
-      if (del) { e.preventDefault(); del.closest('.modal-row').remove(); }
+      if (del) { e.preventDefault(); del.closest('.modal-row').remove(); return; }
+      var ex = e.target.closest('[data-export]');
+      if (ex) { e.preventDefault(); doExport(ex.dataset.export); }
     });
     $('modal').addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeModal(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
@@ -866,6 +947,7 @@
     document.addEventListener('click', function (e) { if (!e.target.closest('.avatar')) menu.hidden = true; });
 
     $('menu-budget').addEventListener('click', function () { menu.hidden = true; openBudget(); });
+    $('menu-export').addEventListener('click', function () { menu.hidden = true; openExport(); });
     $('menu-currency').addEventListener('click', function () { menu.hidden = true; openCurrency(); });
     $('menu-language').addEventListener('click', function () { menu.hidden = true; openLanguage(); });
     $('menu-logout').addEventListener('click', function () {
