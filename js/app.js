@@ -35,6 +35,14 @@
       export_desc: 'Baixe um backup completo (JSON) ou planilhas legíveis (CSV) das suas despesas e investimentos.',
       export_backup: 'Backup completo (JSON)', export_expenses: 'Despesas (CSV)', export_investments: 'Investimentos (CSV)',
       col_date: 'Data', col_amount: 'Valor', col_month: 'Mês', col_invested: 'Aplicado',
+      show_more: 'Mostrar mais ({n})', show_less: 'Mostrar menos',
+      menu_fixas: 'Despesas fixas', fixas_pending: 'Fixas a lançar', fixas_new: '+ Nova despesa fixa', fixas_edit: 'Editar despesa fixa',
+      fixas_desc: 'Cadastre despesas que se repetem. Quando vencem, aparecem na Visão geral pra você lançar com um toque.',
+      fixas_empty: 'Nenhuma despesa fixa ainda.',
+      launch_one: 'Lançar', launch_all: 'Lançar todas',
+      f_frequency: 'Frequência', f_next_due: 'Próximo vencimento',
+      freq_monthly: 'Mensal', freq_weekly: 'Semanal', freq_yearly: 'Anual',
+      del_fixa: 'Remover a despesa fixa "{x}"?',
       prev_month: 'Mês anterior', next_month: 'Próximo mês', select_month: 'Escolher mês', account_menu: 'Menu da conta', close: 'Fechar',
       tab_overview: 'Visão geral', tab_investments: 'Investimentos', tab_history: 'Histórico', tab_categories: 'Categorias',
       available: 'Disponível', daily_avg: 'Média diária', recent_activity: 'Atividade recente',
@@ -80,6 +88,14 @@
       export_desc: 'Download a full backup (JSON) or readable spreadsheets (CSV) of your expenses and investments.',
       export_backup: 'Full backup (JSON)', export_expenses: 'Expenses (CSV)', export_investments: 'Investments (CSV)',
       col_date: 'Date', col_amount: 'Amount', col_month: 'Month', col_invested: 'Invested',
+      show_more: 'Show more ({n})', show_less: 'Show less',
+      menu_fixas: 'Recurring expenses', fixas_pending: 'Recurring to add', fixas_new: '+ New recurring expense', fixas_edit: 'Edit recurring expense',
+      fixas_desc: 'Set up expenses that repeat. When they come due, they appear on the Overview to add with one tap.',
+      fixas_empty: 'No recurring expenses yet.',
+      launch_one: 'Add', launch_all: 'Add all',
+      f_frequency: 'Frequency', f_next_due: 'Next due date',
+      freq_monthly: 'Monthly', freq_weekly: 'Weekly', freq_yearly: 'Yearly',
+      del_fixa: 'Remove the recurring expense "{x}"?',
       prev_month: 'Previous month', next_month: 'Next month', select_month: 'Choose month', account_menu: 'Account menu', close: 'Close',
       tab_overview: 'Overview', tab_investments: 'Investments', tab_history: 'History', tab_categories: 'Categories',
       available: 'Available', daily_avg: 'Daily average', recent_activity: 'Recent activity',
@@ -125,6 +141,14 @@
       export_desc: 'Descarga una copia de seguridad completa (JSON) o planillas legibles (CSV) de tus gastos e inversiones.',
       export_backup: 'Copia completa (JSON)', export_expenses: 'Gastos (CSV)', export_investments: 'Inversiones (CSV)',
       col_date: 'Fecha', col_amount: 'Importe', col_month: 'Mes', col_invested: 'Aplicado',
+      show_more: 'Mostrar más ({n})', show_less: 'Mostrar menos',
+      menu_fixas: 'Gastos fijos', fixas_pending: 'Fijos por registrar', fixas_new: '+ Nuevo gasto fijo', fixas_edit: 'Editar gasto fijo',
+      fixas_desc: 'Configura gastos que se repiten. Cuando vencen, aparecen en el Resumen para registrarlos con un toque.',
+      fixas_empty: 'Sin gastos fijos todavía.',
+      launch_one: 'Registrar', launch_all: 'Registrar todos',
+      f_frequency: 'Frecuencia', f_next_due: 'Próximo vencimiento',
+      freq_monthly: 'Mensual', freq_weekly: 'Semanal', freq_yearly: 'Anual',
+      del_fixa: '¿Eliminar el gasto fijo "{x}"?',
       prev_month: 'Mes anterior', next_month: 'Mes siguiente', select_month: 'Elegir mes', account_menu: 'Menú de la cuenta', close: 'Cerrar',
       tab_overview: 'Resumen', tab_investments: 'Inversiones', tab_history: 'Historial', tab_categories: 'Categorías',
       available: 'Disponible', daily_avg: 'Promedio diario', recent_activity: 'Actividad reciente',
@@ -225,6 +249,16 @@
   function monthKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
   function shortDate(iso) { var p = iso.split('-'); return Number(p[2]) + ' ' + monthName(Number(p[1]) - 1, true); }
   function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function isoOf(dt) { return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0'); }
+  // próximo vencimento de uma recorrência (avança 1 período a partir do atual)
+  function advanceDue(rec) {
+    var p = rec.nextDue.split('-').map(Number);
+    var y = p[0], m = p[1] - 1, d = p[2];
+    if (rec.freq === 'weekly') { var dt = new Date(y, m, d); dt.setDate(dt.getDate() + 7); return isoOf(dt); }
+    if (rec.freq === 'yearly') { y += 1; } else { m += 1; if (m > 11) { m = 0; y += 1; } }
+    var day = Math.min(rec.day || d, new Date(y, m + 1, 0).getDate());
+    return isoOf(new Date(y, m, day));
+  }
   function viewDateStr() {
     var last = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
     var day = Math.min(new Date().getDate(), last);
@@ -453,6 +487,7 @@
 
   /* ======================= VISÃO GERAL ========================== */
   function renderOverview() {
+    renderPendingFixas();
     var totals = categoryTotals(view);
     var spent = totals.reduce(function (s, x) { return s + x.total; }, 0);
     var budget = budgetFor(view);
@@ -603,6 +638,18 @@
   }
   function closeModal() { $('modal').hidden = true; modalSubmit = null; }
 
+  // Renderiza linhas mostrando as 3 mais recentes; o resto fica atrás de "Mostrar mais"
+  function collapsibleRows(listId, rowsArr) {
+    var LIMIT = 3;
+    if (rowsArr.length <= LIMIT) return '<div id="' + listId + '">' + rowsArr.join('') + '</div>';
+    var n = rowsArr.length - LIMIT;
+    return '<div id="' + listId + '">' +
+      rowsArr.slice(0, LIMIT).join('') +
+      '<div class="morewrap" hidden>' + rowsArr.slice(LIMIT).join('') + '</div>' +
+      '<button type="button" class="link morebtn" data-more>' + tr('show_more', { n: n }) + '</button>' +
+    '</div>';
+  }
+
   function enhanceModalForm() {
     var form = $('modal-form');
     var swatches = form.querySelectorAll('.swatch');
@@ -615,11 +662,11 @@
     });
     var addEntry = form.querySelector('#entry-add');
     if (addEntry) addEntry.onclick = function () {
-      form.querySelector('#entry-list').insertAdjacentHTML('beforeend', entryRow(viewDateStr(), ''));
+      form.querySelector('#entry-list').insertAdjacentHTML('afterbegin', entryRow(viewDateStr(), ''));
     };
     var addMov = form.querySelector('#mov-add');
     if (addMov) addMov.onclick = function () {
-      form.querySelector('#mov-list').insertAdjacentHTML('beforeend', movRow('aporte', todayStr(), ''));
+      form.querySelector('#mov-list').insertAdjacentHTML('afterbegin', movRow('aporte', todayStr(), ''));
     };
   }
 
@@ -670,11 +717,14 @@
     var editing = !!exp;
     var monthOf = monthKey(view);
     // Só os lançamentos do mês visível aparecem no modal (os outros meses ficam preservados)
-    var visible = editing ? exp.entries.filter(function (e) { return e.date.slice(0, 7) === monthOf; }) : [];
+    var visible = editing
+      ? exp.entries.filter(function (e) { return e.date.slice(0, 7) === monthOf; })
+          .sort(function (a, b) { return b.date.localeCompare(a.date); })
+      : [];
     var sel = editing ? exp.categoryId : data.categories[0].id;
-    var rows = (editing && visible.length)
-      ? visible.map(function (e) { return entryRow(e.date, e.amount); }).join('')
-      : entryRow(viewDateStr(), '');
+    var rowsArr = (editing && visible.length)
+      ? visible.map(function (e) { return entryRow(e.date, e.amount); })
+      : [entryRow(viewDateStr(), '')];
 
     openModal(editing ? tr('edit_expense') : tr('new_expense'),
       '<label class="field"><span class="field__label">' + tr('f_description') + '</span>' +
@@ -682,7 +732,7 @@
       '<label class="field"><span class="field__label">' + tr('f_category') + '</span><select name="categoryId">' + categoryOptions(sel) + '</select></label>' +
       '<div class="field"><div class="field__label rowhead"><span>' + tr('f_entries') + '</span>' +
         '<button type="button" class="link" id="entry-add">' + tr('add_more') + '</button></div>' +
-        '<div id="entry-list">' + rows + '</div></div>',
+        collapsibleRows('entry-list', rowsArr) + '</div>',
       function (form) {
         var formEntries = readEntries(form);
         var others = editing ? exp.entries.filter(function (e) { return e.date.slice(0, 7) !== monthOf; }) : [];
@@ -710,9 +760,12 @@
   /* ---- Investimento (criar/editar) ---- */
   function openInvestment(inv) {
     var editing = !!inv;
-    var rows = editing
-      ? inv.movements.map(function (m) { return movRow(m.kind, m.date, m.amount); }).join('')
-      : movRow('aporte', todayStr(), '');
+    var movs = editing
+      ? inv.movements.slice().sort(function (a, b) { return b.date.localeCompare(a.date); })
+      : [];
+    var rowsArr = (editing && movs.length)
+      ? movs.map(function (m) { return movRow(m.kind, m.date, m.amount); })
+      : [movRow('aporte', todayStr(), '')];
 
     openModal(editing ? tr('edit_investment') : tr('new_investment'),
       '<label class="field"><span class="field__label">' + tr('f_name') + '</span>' +
@@ -724,7 +777,7 @@
       '</div>' +
       '<div class="field"><div class="field__label rowhead"><span>' + tr('f_movements') + '</span>' +
         '<button type="button" class="link" id="mov-add">' + tr('add_more') + '</button></div>' +
-        '<div id="mov-list">' + rows + '</div></div>' +
+        collapsibleRows('mov-list', rowsArr) + '</div>' +
       '<div class="field"><span class="field__label">' + tr('f_color') + '</span>' + swatchesHtml(editing ? inv.color : SWATCHES[4]) + '</div>',
       function (form) {
         var movements = readMovs(form);
@@ -890,6 +943,125 @@
     $('modal').hidden = false;
   }
 
+  /* ---- Despesas fixas (recorrências) ---- */
+  function applyRecurrenceOccurrence(rec) {
+    var entry = { id: Store.uid(), date: rec.nextDue, amount: rec.amount };
+    var exp = data.expenses.find(function (x) { return x.merchant === rec.merchant && x.categoryId === rec.categoryId; });
+    if (exp) exp.entries.push(entry);
+    else data.expenses.push({ id: Store.uid(), merchant: rec.merchant, categoryId: rec.categoryId, entries: [entry] });
+    rec.nextDue = advanceDue(rec);
+  }
+  function launchRecurrence(id) {
+    var rec = (data.recurrences || []).find(function (r) { return r.id === id; });
+    if (!rec) return;
+    applyRecurrenceOccurrence(rec);              // lança 1 ocorrência e avança
+    save(); renderAll();
+  }
+  function launchAllRecurrences() {
+    var today = todayStr();
+    (data.recurrences || []).forEach(function (rec) {
+      if (rec.active === false) return;
+      var guard = 0;
+      while (rec.nextDue <= today && guard < 120) { applyRecurrenceOccurrence(rec); guard++; }
+    });
+    save(); renderAll();
+  }
+
+  function renderPendingFixas() {
+    var el = $('pending-fixas'); if (!el) return;
+    var today = new Date();
+    var sameMonth = view.getMonth() === today.getMonth() && view.getFullYear() === today.getFullYear();
+    var todayIso = todayStr();
+    var pending = sameMonth
+      ? (data.recurrences || []).filter(function (r) { return r.active !== false && r.nextDue <= todayIso; })
+      : [];
+    if (!pending.length) { el.innerHTML = ''; return; }
+    el.innerHTML = '<article class="card card--fixas"><div class="card__head">' +
+      '<span class="card__label">' + tr('fixas_pending') + '</span>' +
+      '<button class="btn btn--small" data-launch-all>' + tr('launch_all') + '</button></div>' +
+      '<ul class="activity">' + pending.map(function (r) {
+        var c = catById(r.categoryId);
+        return '<li class="activity__item">' +
+          '<span class="activity__dot" style="background:' + c.color + '"></span>' +
+          '<div class="activity__info"><span class="activity__title">' + escapeHtml(r.merchant) + '</span>' +
+            '<span class="activity__meta">' + escapeHtml(c.name) + ' · ' + tr('freq_' + r.freq) + '</span>' +
+            '<span class="activity__date">' + shortDate(r.nextDue) + '</span></div>' +
+          '<span class="activity__amount">' + money(r.amount, { cents: true }) + '</span>' +
+          '<button class="btn btn--small" data-launch="' + r.id + '">' + tr('launch_one') + '</button>' +
+        '</li>';
+      }).join('') + '</ul></article>';
+  }
+
+  function openRecurrences() {
+    var list = data.recurrences || [];
+    var body = '<p class="field__hint" style="margin-top:0">' + tr('fixas_desc') + '</p>';
+    if (list.length) {
+      body += '<ul class="catlist">' + list.map(function (r) {
+        var c = catById(r.categoryId);
+        return '<li class="catlist__item">' +
+          '<span class="catlist__dot" style="background:' + c.color + '"></span>' +
+          '<span class="catlist__name">' + escapeHtml(r.merchant) + '</span>' +
+          '<span class="catlist__total">' + money(r.amount) + ' · ' + tr('freq_' + r.freq) + '</span>' +
+          '<button class="rowbtn rowbtn--edit" data-edit-rec="' + r.id + '" aria-label="' + tr('edit_label') + '">' + ICON_EDIT + '</button>' +
+          '<button class="rowbtn rowbtn--del" data-del-rec="' + r.id + '" aria-label="' + tr('remove_label') + '">' + ICON_DEL + '</button>' +
+        '</li>';
+      }).join('') + '</ul>';
+    } else {
+      body += '<p class="empty">' + tr('fixas_empty') + '</p>';
+    }
+    body += '<div class="exportlist"><button type="button" class="btn btn--block btn--primary" data-new-rec>' + tr('fixas_new') + '</button></div>' +
+      '<div class="modal__actions"><button type="button" class="btn" data-close>' + tr('cancel') + '</button></div>';
+    $('modal-title').textContent = tr('menu_fixas');
+    $('modal-form').innerHTML = body;
+    modalSubmit = null;
+    $('modal').hidden = false;
+  }
+
+  function openRecurrence(rec) {
+    var editing = !!rec;
+    var sel = editing ? rec.categoryId : data.categories[0].id;
+    var freq = editing ? rec.freq : 'monthly';
+    var due = editing ? rec.nextDue : todayStr();
+    function freqOpt(v) { return '<option value="' + v + '"' + (freq === v ? ' selected' : '') + '>' + tr('freq_' + v) + '</option>'; }
+    openModal(editing ? tr('fixas_edit') : tr('fixas_new'),
+      '<label class="field"><span class="field__label">' + tr('f_description') + '</span>' +
+        '<input class="field__input" name="merchant" required placeholder="' + tr('ph_expense') + '" value="' + (editing ? escapeHtml(rec.merchant) : '') + '"></label>' +
+      '<label class="field"><span class="field__label">' + tr('f_category') + '</span><select name="categoryId">' + categoryOptions(sel) + '</select></label>' +
+      '<div class="field__row">' +
+        '<label class="field"><span class="field__label">' + tr('col_amount') + '</span>' +
+          '<input class="field__input" name="amount" type="number" step="0.01" min="0" placeholder="0,00" value="' + (editing ? rec.amount : '') + '"></label>' +
+        '<label class="field"><span class="field__label">' + tr('f_frequency') + '</span>' +
+          '<select name="freq">' + freqOpt('monthly') + freqOpt('weekly') + freqOpt('yearly') + '</select></label>' +
+      '</div>' +
+      '<label class="field"><span class="field__label">' + tr('f_next_due') + '</span>' +
+        '<input type="date" class="row-date" name="nextDue" value="' + due + '"></label>',
+      function (form) {
+        var merchant = form.elements.merchant.value.trim() || tr('def_expense');
+        var amount = Math.abs(parseFloat(form.elements.amount.value) || 0);
+        var nextDue = form.elements.nextDue.value || todayStr();
+        var f = form.elements.freq.value;
+        var day = Number(nextDue.slice(8, 10));
+        if (editing) {
+          rec.merchant = merchant; rec.categoryId = form.elements.categoryId.value;
+          rec.amount = amount; rec.freq = f; rec.nextDue = nextDue; rec.day = day;
+        } else {
+          data.recurrences.push({ id: Store.uid(), merchant: merchant, categoryId: form.elements.categoryId.value,
+            amount: amount, freq: f, nextDue: nextDue, day: day, active: true });
+        }
+        save(); renderAll();
+        openRecurrences();      // volta pro gerenciador atualizado
+        return false;
+      });
+  }
+
+  async function deleteRecurrence(id) {
+    var rec = (data.recurrences || []).find(function (r) { return r.id === id; });
+    if (!rec) return;
+    if (!(await confirmDialog(tr('del_fixa', { x: rec.merchant })))) return;
+    data.recurrences = data.recurrences.filter(function (r) { return r.id !== id; });
+    save(); renderAll(); openRecurrences();
+  }
+
   /* ---- Confirmação estilizada (substitui o confirm() do navegador) ---- */
   function confirmDialog(message, alertOnly) {
     return new Promise(function (resolve) {
@@ -927,6 +1099,17 @@
     $('modal-form').addEventListener('click', function (e) {
       var del = e.target.closest('.row-del');
       if (del) { e.preventDefault(); del.closest('.modal-row').remove(); return; }
+      var more = e.target.closest('[data-more]');
+      if (more) {
+        e.preventDefault();
+        var wrap = more.parentNode.querySelector('.morewrap');
+        if (wrap) {
+          wrap.hidden = !wrap.hidden;
+          var count = wrap.querySelectorAll('.modal-row').length;
+          more.textContent = wrap.hidden ? tr('show_more', { n: count }) : tr('show_less');
+        }
+        return;
+      }
       var ex = e.target.closest('[data-export]');
       if (ex) { e.preventDefault(); doExport(ex.dataset.export); }
     });
@@ -941,6 +1124,11 @@
       if ((t = e.target.closest('[data-del-inv]')))  { deleteInvestment(t.dataset.delInv); return; }
       if ((t = e.target.closest('[data-edit-cat]'))) { var ct = catById(t.dataset.editCat); openCategory(ct); return; }
       if ((t = e.target.closest('[data-del-cat]')))  { deleteCategory(t.dataset.delCat); return; }
+      if ((t = e.target.closest('[data-launch]')))   { launchRecurrence(t.dataset.launch); return; }
+      if (e.target.closest('[data-launch-all]'))     { launchAllRecurrences(); return; }
+      if ((t = e.target.closest('[data-edit-rec]'))) { var rc = (data.recurrences || []).find(function (x) { return x.id === t.dataset.editRec; }); if (rc) openRecurrence(rc); return; }
+      if ((t = e.target.closest('[data-del-rec]')))  { deleteRecurrence(t.dataset.delRec); return; }
+      if (e.target.closest('[data-new-rec]'))        { openRecurrence(null); return; }
     });
 
     $('save-status-retry').addEventListener('click', flushSave);
@@ -952,6 +1140,7 @@
 
     $('menu-budget').addEventListener('click', function () { menu.hidden = true; openBudget(); });
     $('menu-export').addEventListener('click', function () { menu.hidden = true; openExport(); });
+    $('menu-fixas').addEventListener('click', function () { menu.hidden = true; openRecurrences(); });
     $('menu-currency').addEventListener('click', function () { menu.hidden = true; openCurrency(); });
     $('menu-language').addEventListener('click', function () { menu.hidden = true; openLanguage(); });
     $('menu-logout').addEventListener('click', function () {
