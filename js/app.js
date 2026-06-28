@@ -30,6 +30,7 @@
       load_error: 'Não foi possível carregar seus dados.',
       menu_budget: 'Definir orçamento', menu_currency: 'Moeda', menu_language: 'Idioma', menu_logout: 'Sair',
       menu_privacy: 'Política de privacidade', privacy: 'Privacidade',
+      saving: 'Salvando…', saved: 'Salvo', save_error: 'Falha ao salvar', retry: 'Tentar de novo',
       prev_month: 'Mês anterior', next_month: 'Próximo mês', select_month: 'Escolher mês', account_menu: 'Menu da conta', close: 'Fechar',
       tab_overview: 'Visão geral', tab_investments: 'Investimentos', tab_history: 'Histórico', tab_categories: 'Categorias',
       available: 'Disponível', daily_avg: 'Média diária', recent_activity: 'Atividade recente',
@@ -70,6 +71,7 @@
       load_error: "Couldn't load your data.",
       menu_budget: 'Set budget', menu_currency: 'Currency', menu_language: 'Language', menu_logout: 'Log out',
       menu_privacy: 'Privacy policy', privacy: 'Privacy',
+      saving: 'Saving…', saved: 'Saved', save_error: "Couldn't save", retry: 'Retry',
       prev_month: 'Previous month', next_month: 'Next month', select_month: 'Choose month', account_menu: 'Account menu', close: 'Close',
       tab_overview: 'Overview', tab_investments: 'Investments', tab_history: 'History', tab_categories: 'Categories',
       available: 'Available', daily_avg: 'Daily average', recent_activity: 'Recent activity',
@@ -110,6 +112,7 @@
       load_error: 'No se pudieron cargar tus datos.',
       menu_budget: 'Definir presupuesto', menu_currency: 'Moneda', menu_language: 'Idioma', menu_logout: 'Salir',
       menu_privacy: 'Política de privacidad', privacy: 'Privacidad',
+      saving: 'Guardando…', saved: 'Guardado', save_error: 'No se pudo guardar', retry: 'Reintentar',
       prev_month: 'Mes anterior', next_month: 'Mes siguiente', select_month: 'Elegir mes', account_menu: 'Menú de la cuenta', close: 'Cerrar',
       tab_overview: 'Resumen', tab_investments: 'Inversiones', tab_history: 'Historial', tab_categories: 'Categorías',
       available: 'Disponible', daily_avg: 'Promedio diario', recent_activity: 'Actividad reciente',
@@ -256,13 +259,49 @@
       .sort(function (a, b) { return b.total - a.total; });
   }
 
-  // salvamento com debounce (deixa o app mais rápido em edições seguidas)
-  var saveTimer = null;
+  // salvamento com debounce + feedback visual (salvando / salvo / falha)
+  var saveTimer = null, saveHideTimer = null;
   function save() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(function () {
-      Store.saveData(data).catch(function (e) { console.error('Falha ao salvar:', e); });
-    }, 400);
+    setSaveStatus('saving');
+    saveTimer = setTimeout(flushSave, 400);
+  }
+  function flushSave() {
+    clearTimeout(saveTimer);
+    setSaveStatus('saving');
+    Store.saveData(data)
+      .then(function () { setSaveStatus('saved'); })
+      .catch(function (e) { console.error('Falha ao salvar:', e); setSaveStatus('error'); });
+  }
+  function setSaveStatus(state) {
+    var el = $('save-status'); if (!el) return;
+    clearTimeout(saveHideTimer);
+    el.classList.remove('savestatus--saving', 'savestatus--saved', 'savestatus--error');
+    var icon = $('save-status-icon'), text = $('save-status-text'), retry = $('save-status-retry');
+    retry.hidden = true;
+    if (state === 'saving') {
+      el.classList.add('savestatus--saving');
+      icon.className = 'savestatus__icon savestatus__spin'; icon.textContent = '';
+      text.textContent = tr('saving');
+    } else if (state === 'saved') {
+      el.classList.add('savestatus--saved');
+      icon.className = 'savestatus__icon'; icon.textContent = '✓';
+      text.textContent = tr('saved');
+      saveHideTimer = setTimeout(hideSaveStatus, 1800);
+    } else {
+      el.classList.add('savestatus--error');
+      icon.className = 'savestatus__icon'; icon.textContent = '!';
+      text.textContent = tr('save_error');
+      retry.hidden = false; retry.textContent = tr('retry');
+    }
+    el.hidden = false;
+    void el.offsetWidth;            // força reflow para animar a entrada
+    el.classList.add('is-visible');
+  }
+  function hideSaveStatus() {
+    var el = $('save-status'); if (!el) return;
+    el.classList.remove('is-visible');
+    saveHideTimer = setTimeout(function () { el.hidden = true; }, 280);
   }
 
   function escapeHtml(s) {
@@ -818,6 +857,8 @@
       if ((t = e.target.closest('[data-edit-cat]'))) { var ct = catById(t.dataset.editCat); openCategory(ct); return; }
       if ((t = e.target.closest('[data-del-cat]')))  { deleteCategory(t.dataset.delCat); return; }
     });
+
+    $('save-status-retry').addEventListener('click', flushSave);
 
     var avatar = $('avatar-btn'), menu = $('account-menu');
     avatar.addEventListener('click', function (e) { if (e.target.closest('.menu')) return; menu.hidden = !menu.hidden; });
