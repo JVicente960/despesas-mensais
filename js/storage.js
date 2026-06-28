@@ -62,7 +62,8 @@
       budget: 5000, currency: 'BRL', lang: null, monthBudgets: {},
       categories: defaultCategories(),
       expenses: [],
-      investments: []
+      investments: [],
+      recurrences: []
     };
   }
 
@@ -103,6 +104,7 @@
     if (data.budget == null) data.budget = 5000;
     if (!data.currency) data.currency = 'BRL';
     if (!data.categories) data.categories = defaultCategories();
+    if (!data.recurrences) data.recurrences = [];
     return data;
   }
 
