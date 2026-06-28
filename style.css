@@ -119,7 +119,8 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 .auth__switch .link { margin-left:6px; }
 .auth__divider { display:flex; align-items:center; gap:12px; margin:20px 0 16px; color:var(--text-faint); font-size:13px; }
 .auth__divider::before, .auth__divider::after { content:""; flex:1; height:1px; background:var(--border-strong); }
-.auth__google { display:flex; justify-content:center; min-height:44px; color-scheme:light; }
+.auth__google { display:flex; justify-content:center; width:100%; max-width:100%; min-height:44px; color-scheme:light; overflow:hidden; }
+.auth__google > div { max-width:100%; }
 
 /* ----------------------------- APP ----------------------------- */
 .app { position:relative; z-index:1; max-width:1320px; margin:0 auto;
@@ -235,6 +236,8 @@ select option, select optgroup { background-color:var(--panel); color:var(--text
 }
 @media (max-width:640px) {
   .app { padding:18px max(16px,env(safe-area-inset-right)) 50px max(16px,env(safe-area-inset-left)); }
+  .auth { padding:20px; overflow-x:hidden; }
+  .auth__card { padding:26px 22px; }
   .topbar { grid-template-columns:1fr auto; gap:14px; row-gap:16px; }
   .topbar .brand { grid-column:1; }
   .topbar .avatar { grid-column:2; }
