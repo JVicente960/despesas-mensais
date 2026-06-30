@@ -622,8 +622,28 @@
 
   /* ===================== MODAIS E FORMULÁRIOS ==================== */
   var modalSubmit = null;
+  var lastFocus = null;
+
+  // elementos focáveis e visíveis dentro de um container (p/ prender o Tab)
+  function visibleFocusables(container) {
+    var sel = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return Array.prototype.filter.call(container.querySelectorAll(sel), function (el) {
+      return !el.hidden && !el.closest('[hidden]');
+    });
+  }
+  function trapFocus(container, e) {
+    var f = visibleFocusables(container);
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1], active = document.activeElement;
+    if (e.shiftKey) {
+      if (active === first || !container.contains(active)) { e.preventDefault(); last.focus(); }
+    } else {
+      if (active === last || !container.contains(active)) { e.preventDefault(); first.focus(); }
+    }
+  }
 
   function openModal(title, bodyHtml, onSubmit) {
+    if ($('modal').hidden) lastFocus = document.activeElement;   // guarda quem abriu
     $('modal-title').textContent = title;
     $('modal-form').innerHTML = bodyHtml +
       '<div class="modal__actions">' +
@@ -636,7 +656,11 @@
     var first = $('modal-form').querySelector('input, select');
     if (first) first.focus();
   }
-  function closeModal() { $('modal').hidden = true; modalSubmit = null; }
+  function closeModal() {
+    $('modal').hidden = true; modalSubmit = null;
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    lastFocus = null;
+  }
 
   // Renderiza linhas mostrando as 3 mais recentes; o resto fica atrás de "Mostrar mais"
   function collapsibleRows(listId, rowsArr) {
@@ -940,7 +964,10 @@
       '</div>' +
       '<div class="modal__actions"><button type="button" class="btn" data-close>' + tr('cancel') + '</button></div>';
     modalSubmit = null;
+    if ($('modal').hidden) lastFocus = document.activeElement;
     $('modal').hidden = false;
+    var f1 = $('modal-form').querySelector('a[href], button, input, select');
+    if (f1) f1.focus();
   }
 
   /* ---- Despesas fixas (recorrências) ---- */
@@ -1014,7 +1041,10 @@
     $('modal-title').textContent = tr('menu_fixas');
     $('modal-form').innerHTML = body;
     modalSubmit = null;
+    if ($('modal').hidden) lastFocus = document.activeElement;
     $('modal').hidden = false;
+    var f2 = $('modal-form').querySelector('a[href], button, input, select');
+    if (f2) f2.focus();
   }
 
   function openRecurrence(rec) {
@@ -1065,21 +1095,33 @@
   /* ---- Confirmação estilizada (substitui o confirm() do navegador) ---- */
   function confirmDialog(message, alertOnly) {
     return new Promise(function (resolve) {
+      var prevFocus = document.activeElement;
       var el = document.createElement('div');
       el.className = 'confirm';
       el.innerHTML =
         '<div class="confirm__backdrop"></div>' +
-        '<div class="confirm__box" role="alertdialog">' +
+        '<div class="confirm__box" role="alertdialog" aria-modal="true">' +
           '<p class="confirm__msg">' + escapeHtml(message) + '</p>' +
           '<div class="confirm__actions">' +
             (alertOnly ? '' : '<button class="btn" data-no>' + tr('cancel') + '</button>') +
             '<button class="btn ' + (alertOnly ? 'btn--primary' : 'btn--danger') + '" data-yes>' + (alertOnly ? tr('ok') : tr('remove')) + '</button>' +
           '</div></div>';
       document.body.appendChild(el);
-      function done(v) { el.remove(); resolve(v); }
+      function onKey(ev) {
+        if (ev.key === 'Escape') { ev.preventDefault(); done(false); }
+        else if (ev.key === 'Tab') { trapFocus(el, ev); }
+      }
+      document.addEventListener('keydown', onKey);
+      function done(v) {
+        document.removeEventListener('keydown', onKey);
+        el.remove();
+        if (prevFocus && prevFocus.focus) { try { prevFocus.focus(); } catch (e) {} }
+        resolve(v);
+      }
       el.querySelector('[data-yes]').onclick = function () { done(true); };
       var no = el.querySelector('[data-no]'); if (no) no.onclick = function () { done(false); };
       el.querySelector('.confirm__backdrop').onclick = function () { done(false); };
+      el.querySelector('[data-yes]').focus();      // foco inicial no botão principal
     });
   }
 
@@ -1114,7 +1156,12 @@
       if (ex) { e.preventDefault(); doExport(ex.dataset.export); }
     });
     $('modal').addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeModal(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
+    document.addEventListener('keydown', function (e) {
+      if (document.querySelector('.confirm')) return;     // confirm cuida do próprio teclado
+      if ($('modal').hidden) return;
+      if (e.key === 'Tab') trapFocus($('modal'), e);
+      else if (e.key === 'Escape') closeModal();
+    });
 
     document.addEventListener('click', function (e) {
       var t;
