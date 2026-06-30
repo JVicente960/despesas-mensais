@@ -20,14 +20,42 @@ const SESSION_TTL = 1000 * 60 * 60 * 24 * 60; // sessão válida por 60 dias
 // Client ID do Google (público, pode ficar no código). Usado pra conferir o "aud" do token.
 const GOOGLE_CLIENT_ID = '528000890824-kgndiholp2r5kq91f1hsn4i4ls2jddia.apps.googleusercontent.com';
 
-const json = (data, status = 200) =>
+const json = (data, status = 200, extraHeaders) =>
   new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' }
+    headers: Object.assign({ 'Content-Type': 'application/json' }, extraHeaders || {})
   });
 
+/* ----------- rate-limit de login (tentativas falhas por IP, via D1) ----------- */
+const RL_MAX = 8;                       // tentativas falhas permitidas
+const RL_WINDOW = 10 * 60 * 1000;       // janela de 10 minutos
+
+async function rateBlockedSeconds(env, key) {
+  const now = Date.now();
+  const row = await env.DB.prepare('SELECT count, first_ts FROM login_attempts WHERE key = ?').bind(key).first();
+  if (row && (now - row.first_ts) < RL_WINDOW && row.count >= RL_MAX) {
+    return Math.ceil((RL_WINDOW - (now - row.first_ts)) / 1000);
+  }
+  return 0;
+}
+async function rateFail(env, key) {
+  const now = Date.now();
+  const row = await env.DB.prepare('SELECT first_ts FROM login_attempts WHERE key = ?').bind(key).first();
+  if (!row || (now - row.first_ts) >= RL_WINDOW) {
+    await env.DB.prepare(
+      'INSERT INTO login_attempts (key, count, first_ts) VALUES (?, 1, ?) ' +
+      'ON CONFLICT(key) DO UPDATE SET count = 1, first_ts = ?'
+    ).bind(key, now, now).run();
+  } else {
+    await env.DB.prepare('UPDATE login_attempts SET count = count + 1 WHERE key = ?').bind(key).run();
+  }
+}
+async function rateReset(env, key) {
+  await env.DB.prepare('DELETE FROM login_attempts WHERE key = ?').bind(key).run();
+}
+
 // Hash de senha com PBKDF2 (100k iterações, SHA-256) — bem mais seguro que SHA-256 puro.
-async function hashPassword(password, salt) {
+export async function hashPassword(password, salt) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits(
@@ -148,12 +176,22 @@ export async function onRequest(context) {
 
     /* ---- login ---- */
     if (route === 'login' && method === 'POST') {
+      const ip = request.headers.get('CF-Connecting-IP') || 'desconhecido';
+      const rlKey = 'login:' + ip;
+
+      const wait = await rateBlockedSeconds(env, rlKey);
+      if (wait > 0) {
+        return json({ error: 'Muitas tentativas de login. Tente novamente em alguns minutos.' }, 429, { 'Retry-After': String(wait) });
+      }
+
       const { username, password } = await request.json();
       const u = (username || '').trim();
       const user = await env.DB.prepare('SELECT salt, hash FROM users WHERE username = ?').bind(u).first();
-      if (!user) return json({ error: 'Usuário ou senha incorretos.' }, 401);
+      if (!user) { await rateFail(env, rlKey); return json({ error: 'Usuário ou senha incorretos.' }, 401); }
       const hash = await hashPassword(password, user.salt);
-      if (!safeEqual(hash, user.hash)) return json({ error: 'Usuário ou senha incorretos.' }, 401);
+      if (!safeEqual(hash, user.hash)) { await rateFail(env, rlKey); return json({ error: 'Usuário ou senha incorretos.' }, 401); }
+
+      await rateReset(env, rlKey);     // sucesso zera o contador desse IP
 
       const token = crypto.randomUUID();
       await env.DB.prepare('INSERT INTO sessions (token, username, created_at) VALUES (?, ?, ?)')
