@@ -1155,7 +1155,7 @@
       var ex = e.target.closest('[data-export]');
       if (ex) { e.preventDefault(); doExport(ex.dataset.export); }
     });
-    $('modal').addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) closeModal(); });
+    $('modal').addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeModal(); });
     document.addEventListener('keydown', function (e) {
       if (document.querySelector('.confirm')) return;     // confirm cuida do próprio teclado
       if ($('modal').hidden) return;
