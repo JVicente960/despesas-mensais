@@ -28,3 +28,10 @@ CREATE TABLE IF NOT EXISTS user_data (
   username TEXT PRIMARY KEY,
   json     TEXT NOT NULL
 );
+
+-- Controle de tentativas de login (rate-limit contra força bruta), por IP
+CREATE TABLE IF NOT EXISTS login_attempts (
+  key      TEXT PRIMARY KEY,
+  count    INTEGER NOT NULL,
+  first_ts INTEGER NOT NULL
+);
