@@ -26,6 +26,11 @@
       login_sub: 'Acesse seu painel de despesas.', register_sub: 'Comece a controlar seus gastos.',
       login_btn: 'Entrar', register_btn: 'Criar conta',
       no_account: 'Não tem conta?', have_account: 'Já tem conta?', or: 'ou',
+      pw_hint: 'Mínimo de 8 caracteres.',
+      pw_short: 'A senha precisa ter pelo menos 8 caracteres.',
+      pw_common: 'Essa senha é muito comum. Escolha uma mais difícil de adivinhar.',
+      pw_equals_user: 'A senha não pode ser igual ao nome de usuário.',
+      pw_repeat: 'Evite uma senha com um único caractere repetido.',
       user_label: 'Usuário', pass_label: 'Senha',
       load_error: 'Não foi possível carregar seus dados.',
       menu_budget: 'Definir orçamento', menu_currency: 'Moeda', menu_language: 'Idioma', menu_logout: 'Sair',
@@ -79,6 +84,11 @@
       login_sub: 'Access your expense dashboard.', register_sub: 'Start tracking your spending.',
       login_btn: 'Sign in', register_btn: 'Create account',
       no_account: "Don't have an account?", have_account: 'Already have an account?', or: 'or',
+      pw_hint: 'At least 8 characters.',
+      pw_short: 'Password must be at least 8 characters.',
+      pw_common: 'That password is too common. Choose a harder one to guess.',
+      pw_equals_user: 'The password cannot be the same as the username.',
+      pw_repeat: 'Avoid a password made of a single repeated character.',
       user_label: 'Username', pass_label: 'Password',
       load_error: "Couldn't load your data.",
       menu_budget: 'Set budget', menu_currency: 'Currency', menu_language: 'Language', menu_logout: 'Log out',
@@ -132,6 +142,11 @@
       login_sub: 'Accede a tu panel de gastos.', register_sub: 'Empieza a controlar tus gastos.',
       login_btn: 'Iniciar sesión', register_btn: 'Crear cuenta',
       no_account: '¿No tienes cuenta?', have_account: '¿Ya tienes cuenta?', or: 'o',
+      pw_hint: 'Mínimo 8 caracteres.',
+      pw_short: 'La contraseña debe tener al menos 8 caracteres.',
+      pw_common: 'Esa contraseña es muy común. Elige una más difícil de adivinar.',
+      pw_equals_user: 'La contraseña no puede ser igual al nombre de usuario.',
+      pw_repeat: 'Evita una contraseña de un solo carácter repetido.',
       user_label: 'Usuario', pass_label: 'Contraseña',
       load_error: 'No se pudieron cargar tus datos.',
       menu_budget: 'Definir presupuesto', menu_currency: 'Moneda', menu_language: 'Idioma', menu_logout: 'Salir',
@@ -359,6 +374,20 @@
   /* ======================== AUTENTICAÇÃO ========================= */
   var authMode = 'login';
 
+  // senhas óbvias barradas no cadastro (espelha o backend p/ aviso instantâneo e traduzido)
+  var COMMON_PW = ['12345678','123456789','1234567890','password','password1','password123',
+    'senha123','senha1234','qwerty123','qwertyui','11111111','00000000','iloveyou','admin123',
+    'abc12345','12341234','87654321','1q2w3e4r','aaaaaaaa','senhasenha'];
+  function passwordProblem(pass, user) {
+    var p = String(pass || '');
+    if (p.length < 8) return tr('pw_short');
+    var low = p.toLowerCase();
+    if (COMMON_PW.indexOf(low) >= 0) return tr('pw_common');
+    if (user && low === String(user).toLowerCase().trim()) return tr('pw_equals_user');
+    if (/^(.)\1+$/.test(p)) return tr('pw_repeat');
+    return null;
+  }
+
   function setupAuth() {
     var form = $('auth-form');
     var switchBtn = $('auth-switch-btn');
@@ -372,12 +401,18 @@
       $('auth-switch-text').textContent = login ? tr('no_account') : tr('have_account');
       switchBtn.textContent = login ? tr('register_btn') : tr('login_btn');
       $('auth-error').textContent = '';
+      $('auth-pass-hint').hidden = login;                 // dica só no cadastro
+      $('auth-pass').setAttribute('autocomplete', login ? 'current-password' : 'new-password');
     });
 
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      $('auth-submit').disabled = true;
       var user = $('auth-user').value, pass = $('auth-pass').value;
+      if (authMode === 'register') {                      // valida a senha antes de enviar
+        var problem = passwordProblem(pass, user);
+        if (problem) { $('auth-error').textContent = problem; return; }
+      }
+      $('auth-submit').disabled = true;
       var res = authMode === 'login' ? await Store.login(user, pass) : await Store.register(user, pass);
       if (!res.ok) { $('auth-error').textContent = res.error; $('auth-submit').disabled = false; return; }
       if (authMode === 'register') {
