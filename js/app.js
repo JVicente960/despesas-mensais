@@ -75,6 +75,8 @@
       del_category: 'Remover a categoria "{x}"? As despesas dela vão para outra categoria.',
       ph_expense: 'Ex.: Padaria', ph_investment: 'Ex.: Tesouro Selic', ph_category: 'Ex.: Educação',
       def_expense: 'Despesa', def_investment: 'Investimento', def_category: 'Categoria', no_category: 'Sem categoria',
+      cat_moradia: 'Moradia', cat_alimento: 'Alimentação', cat_outros: 'Outros', cat_compras: 'Compras',
+      cat_transp: 'Transporte', cat_contas: 'Contas', cat_saude: 'Saúde', cat_lazer: 'Lazer',
       remove_entry: 'Remover lançamento', remove_label: 'Remover', edit_label: 'Editar',
       inv_fixed: 'Renda Fixa', inv_stocks: 'Ações', inv_fii: 'FII', inv_crypto: 'Cripto', inv_funds: 'Fundos', inv_treasury: 'Tesouro', inv_pension: 'Previdência', inv_other: 'Outros'
     },
@@ -133,6 +135,8 @@
       del_category: 'Remove the category "{x}"? Its expenses will move to another category.',
       ph_expense: 'e.g. Bakery', ph_investment: 'e.g. Treasury bond', ph_category: 'e.g. Education',
       def_expense: 'Expense', def_investment: 'Investment', def_category: 'Category', no_category: 'No category',
+      cat_moradia: 'Housing', cat_alimento: 'Food', cat_outros: 'Other', cat_compras: 'Shopping',
+      cat_transp: 'Transport', cat_contas: 'Bills', cat_saude: 'Health', cat_lazer: 'Leisure',
       remove_entry: 'Remove entry', remove_label: 'Remove', edit_label: 'Edit',
       inv_fixed: 'Fixed income', inv_stocks: 'Stocks', inv_fii: 'REIT', inv_crypto: 'Crypto', inv_funds: 'Funds', inv_treasury: 'Treasury', inv_pension: 'Pension', inv_other: 'Other'
     },
@@ -191,6 +195,8 @@
       del_category: '¿Eliminar la categoría "{x}"? Sus gastos pasarán a otra categoría.',
       ph_expense: 'Ej.: Panadería', ph_investment: 'Ej.: Bono del tesoro', ph_category: 'Ej.: Educación',
       def_expense: 'Gasto', def_investment: 'Inversión', def_category: 'Categoría', no_category: 'Sin categoría',
+      cat_moradia: 'Vivienda', cat_alimento: 'Alimentación', cat_outros: 'Otros', cat_compras: 'Compras',
+      cat_transp: 'Transporte', cat_contas: 'Cuentas', cat_saude: 'Salud', cat_lazer: 'Ocio',
       remove_entry: 'Eliminar movimiento', remove_label: 'Eliminar', edit_label: 'Editar',
       inv_fixed: 'Renta fija', inv_stocks: 'Acciones', inv_fii: 'FII', inv_crypto: 'Cripto', inv_funds: 'Fondos', inv_treasury: 'Tesoro', inv_pension: 'Pensión', inv_other: 'Otros'
     }
@@ -282,6 +288,11 @@
 
   function catById(id) {
     return data.categories.find(function (c) { return c.id === id; }) || { name: tr('no_category'), color: '#888' };
+  }
+  // nome de categoria: as padrão (preset) traduzem pelo idioma; as do usuário mantêm o nome digitado
+  function catName(cat) {
+    if (!cat) return tr('no_category');
+    return (cat.preset && cat.key) ? tr('cat_' + cat.key) : cat.name;
   }
   function budgetFor(d) {
     var k = monthKey(d);
@@ -535,7 +546,7 @@
     $('legend').innerHTML = totals.map(function (x) {
       return '<div class="legend__item">' +
         '<span class="legend__dot" style="background:' + x.cat.color + '"></span>' +
-        '<span class="legend__name">' + escapeHtml(x.cat.name) + '</span>' +
+        '<span class="legend__name">' + escapeHtml(catName(x.cat)) + '</span>' +
         '<span class="legend__value">' + money(x.total) + '</span></div>';
     }).join('') || '<p class="empty">' + tr('no_expenses_month') + '</p>';
 
@@ -561,7 +572,7 @@
         '<span class="activity__dot" style="background:' + c.color + '"></span>' +
         '<div class="activity__info">' +
           '<span class="activity__title">' + escapeHtml(g.exp.merchant) + '</span>' +
-          '<span class="activity__meta">' + escapeHtml(c.name) + '</span>' +
+          '<span class="activity__meta">' + escapeHtml(catName(c)) + '</span>' +
           '<span class="activity__date">' + escapeHtml(dateOrCount) + '</span></div>' +
         '<span class="activity__amount">-' + money(g.total, { cents: true }) + '</span>' +
         '<button class="rowbtn rowbtn--edit" data-edit-exp="' + g.exp.id + '" aria-label="' + tr('edit_label') + '">' + ICON_EDIT + '</button>' +
@@ -633,7 +644,7 @@
     $('history-breakdown').innerHTML = totals.map(function (x) {
       return '<li class="activity__item">' +
         '<span class="activity__dot" style="background:' + x.cat.color + '"></span>' +
-        '<div class="activity__info"><span class="activity__title">' + escapeHtml(x.cat.name) + '</span></div>' +
+        '<div class="activity__info"><span class="activity__title">' + escapeHtml(catName(x.cat)) + '</span></div>' +
         '<span class="activity__amount">' + money(x.total) + '</span></li>';
     }).join('') || '<p class="empty">' + tr('no_expenses_hist') + '</p>';
   }
@@ -647,7 +658,7 @@
     $('catlist').innerHTML = data.categories.map(function (c) {
       return '<li class="catlist__item">' +
         '<span class="catlist__dot" style="background:' + c.color + '"></span>' +
-        '<span class="catlist__name">' + escapeHtml(c.name) + '</span>' +
+        '<span class="catlist__name">' + escapeHtml(catName(c)) + '</span>' +
         '<span class="catlist__total">' + tr('total_suffix', { x: money(allTotals[c.id] || 0) }) + '</span>' +
         '<button class="rowbtn rowbtn--edit" data-edit-cat="' + c.id + '" aria-label="' + tr('edit_label') + '">' + ICON_EDIT + '</button>' +
         '<button class="rowbtn rowbtn--del" data-del-cat="' + c.id + '" aria-label="' + tr('remove_label') + '">' + ICON_DEL + '</button>' +
@@ -731,7 +742,7 @@
 
   function categoryOptions(sel) {
     return data.categories.map(function (c) {
-      return '<option value="' + c.id + '"' + (c.id === sel ? ' selected' : '') + '>' + escapeHtml(c.name) + '</option>';
+      return '<option value="' + c.id + '"' + (c.id === sel ? ' selected' : '') + '>' + escapeHtml(catName(c)) + '</option>';
     }).join('');
   }
   function typeOptions(sel) {
@@ -866,13 +877,18 @@
     var editing = !!cat;
     openModal(editing ? tr('edit_category') : tr('new_category'),
       '<label class="field"><span class="field__label">' + tr('f_name') + '</span>' +
-        '<input class="field__input" name="name" required placeholder="' + tr('ph_category') + '" value="' + (editing ? escapeHtml(cat.name) : '') + '"></label>' +
+        '<input class="field__input" name="name" required placeholder="' + tr('ph_category') + '" value="' + (editing ? escapeHtml(catName(cat)) : '') + '"></label>' +
       '<div class="field"><span class="field__label">' + tr('f_color') + '</span>' + swatchesHtml(editing ? cat.color : SWATCHES[0]) + '</div>',
       function (form) {
         var color = form.dataset.color || (editing ? cat.color : SWATCHES[0]);
         var name = form.elements.name.value.trim() || tr('def_category');
-        if (editing) { cat.name = name; cat.color = color; }
-        else { data.categories.push({ id: 'cat-' + Store.uid(), name: name, color: color }); }
+        if (editing) {
+          cat.color = color;
+          // se o usuário mudou o nome de uma padrão, ela deixa de ser "preset" (para de traduzir)
+          if (name !== catName(cat)) { cat.name = name; cat.preset = false; delete cat.key; }
+        } else {
+          data.categories.push({ id: 'cat-' + Store.uid(), name: name, color: color });
+        }
         save(); renderAll();
       });
     if (!editing) $('modal-form').dataset.color = SWATCHES[0];
@@ -881,8 +897,8 @@
   async function deleteCategory(id) {
     if (data.categories.length <= 1) { await confirmDialog(tr('keep_one_cat'), true); return; }
     var cat = catById(id);
-    if (!(await confirmDialog(tr('del_category', { x: cat.name })))) return;
-    var fallback = data.categories.find(function (c) { return c.id !== id && /outros|other|otros/i.test(c.name); })
+    if (!(await confirmDialog(tr('del_category', { x: catName(cat) })))) return;
+    var fallback = data.categories.find(function (c) { return c.id !== id && (c.id === 'cat-outros' || /outros|other|otros/i.test(c.name)); })
                 || data.categories.find(function (c) { return c.id !== id; });
     data.expenses.forEach(function (exp) { if (exp.categoryId === id) exp.categoryId = fallback.id; });
     data.categories = data.categories.filter(function (c) { return c.id !== id; });
@@ -966,7 +982,7 @@
     var flat = [];
     data.expenses.forEach(function (exp) {
       var cat = catById(exp.categoryId);
-      exp.entries.forEach(function (e) { flat.push({ date: e.date, merchant: exp.merchant, cat: cat.name, amount: e.amount }); });
+      exp.entries.forEach(function (e) { flat.push({ date: e.date, merchant: exp.merchant, cat: catName(cat), amount: e.amount }); });
     });
     flat.sort(function (a, b) { return a.date.localeCompare(b.date); });
     flat.forEach(function (r) { rows.push([r.date, r.merchant, r.cat, csvNum(r.amount), r.date.slice(0, 7)]); });
@@ -1046,7 +1062,7 @@
         return '<li class="activity__item">' +
           '<span class="activity__dot" style="background:' + c.color + '"></span>' +
           '<div class="activity__info"><span class="activity__title">' + escapeHtml(r.merchant) + '</span>' +
-            '<span class="activity__meta">' + escapeHtml(c.name) + ' · ' + tr('freq_' + r.freq) + '</span>' +
+            '<span class="activity__meta">' + escapeHtml(catName(c)) + ' · ' + tr('freq_' + r.freq) + '</span>' +
             '<span class="activity__date">' + shortDate(r.nextDue) + '</span></div>' +
           '<span class="activity__amount">' + money(r.amount, { cents: true }) + '</span>' +
           '<button class="btn btn--small" data-launch="' + r.id + '">' + tr('launch_one') + '</button>' +
