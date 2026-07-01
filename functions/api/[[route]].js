@@ -73,6 +73,24 @@ function safeEqual(a, b) {
   return diff === 0;
 }
 
+// senhas óbvias barradas no cadastro
+const COMMON_PASSWORDS = new Set([
+  '12345678', '123456789', '1234567890', 'password', 'password1', 'password123',
+  'senha123', 'senha1234', 'qwerty123', 'qwertyui', '11111111', '00000000',
+  'iloveyou', 'admin123', 'abc12345', '12341234', '87654321', '1q2w3e4r',
+  'aaaaaaaa', 'senhasenha'
+]);
+// retorna uma mensagem de problema, ou null se a senha for aceitável
+function passwordProblem(password, username) {
+  const p = String(password || '');
+  if (p.length < 8) return 'A senha precisa ter pelo menos 8 caracteres.';
+  const low = p.toLowerCase();
+  if (COMMON_PASSWORDS.has(low)) return 'Essa senha é muito comum. Escolha uma mais difícil de adivinhar.';
+  if (username && low === String(username).toLowerCase()) return 'A senha não pode ser igual ao nome de usuário.';
+  if (/^(.)\1+$/.test(p)) return 'Evite uma senha com um único caractere repetido.';
+  return null;
+}
+
 /* ----------- validação do token de identidade do Google (RS256) ----------- */
 function b64urlToBytes(s) {
   s = String(s).replace(/-/g, '+').replace(/_/g, '/');
@@ -162,7 +180,8 @@ export async function onRequest(context) {
       const { username, password } = await request.json();
       const u = (username || '').trim();
       if (!u) return json({ error: 'Informe um nome de usuário.' }, 400);
-      if ((password || '').length < 4) return json({ error: 'A senha precisa ter ao menos 4 caracteres.' }, 400);
+      const pwProblem = passwordProblem(password, u);
+      if (pwProblem) return json({ error: pwProblem }, 400);
 
       const exists = await env.DB.prepare('SELECT 1 FROM users WHERE username = ?').bind(u).first();
       if (exists) return json({ error: 'Esse usuário já existe.' }, 409);
