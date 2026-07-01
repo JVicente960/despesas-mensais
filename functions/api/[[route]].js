@@ -16,6 +16,7 @@
    ===================================================================== */
 
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 60; // sessão válida por 60 dias
+const MAX_DATA_BYTES = 1000000;               // teto do PUT /api/data (~1 MB) contra abuso
 
 // Client ID do Google (público, pode ficar no código). Usado pra conferir o "aud" do token.
 const GOOGLE_CLIENT_ID = '528000890824-kgndiholp2r5kq91f1hsn4i4ls2jddia.apps.googleusercontent.com';
@@ -277,8 +278,18 @@ export async function onRequest(context) {
         return json({ data: row ? JSON.parse(row.json) : null });
       }
       if (method === 'PUT') {
+        // pré-checagem rápida pelo Content-Length (rejeita cedo, sem ler o corpo)
+        const clen = Number(request.headers.get('Content-Length') || 0);
+        if (clen && clen > MAX_DATA_BYTES) return json({ error: 'Dados grandes demais.' }, 413);
+
         const body = await request.text();
-        try { JSON.parse(body); } catch (e) { return json({ error: 'JSON inválido.' }, 400); }
+        if (body.length > MAX_DATA_BYTES) return json({ error: 'Dados grandes demais.' }, 413);
+
+        let parsed;
+        try { parsed = JSON.parse(body); } catch (e) { return json({ error: 'JSON inválido.' }, 400); }
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          return json({ error: 'Formato inválido.' }, 400);
+        }
         await env.DB.prepare(
           'INSERT INTO user_data (username, json) VALUES (?, ?) ' +
           'ON CONFLICT(username) DO UPDATE SET json = excluded.json'
