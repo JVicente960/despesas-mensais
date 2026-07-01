@@ -423,21 +423,28 @@
     return null;
   }
 
+  // aplica os textos do formulário conforme o modo atual (login/cadastro)
+  function applyAuthMode() {
+    var login = authMode === 'login';
+    $('auth-title').textContent = login ? tr('login_title') : tr('register_title');
+    $('auth-subtitle').textContent = login ? tr('login_sub') : tr('register_sub');
+    $('auth-submit').textContent = login ? tr('login_btn') : tr('register_btn');
+    $('auth-switch-text').textContent = login ? tr('no_account') : tr('have_account');
+    $('auth-switch-btn').textContent = login ? tr('register_btn') : tr('login_btn');
+    $('auth-pass-hint').hidden = login;
+    $('auth-pass').setAttribute('autocomplete', login ? 'current-password' : 'new-password');
+  }
+  // volta o formulário pro modo "Entrar" (usado ao sair / excluir conta)
+  function resetAuthToLogin() { authMode = 'login'; applyAuthMode(); $('auth-error').textContent = ''; }
+
   function setupAuth() {
     var form = $('auth-form');
     var switchBtn = $('auth-switch-btn');
 
     switchBtn.addEventListener('click', function () {
       authMode = authMode === 'login' ? 'register' : 'login';
-      var login = authMode === 'login';
-      $('auth-title').textContent = login ? tr('login_title') : tr('register_title');
-      $('auth-subtitle').textContent = login ? tr('login_sub') : tr('register_sub');
-      $('auth-submit').textContent = login ? tr('login_btn') : tr('register_btn');
-      $('auth-switch-text').textContent = login ? tr('no_account') : tr('have_account');
-      switchBtn.textContent = login ? tr('register_btn') : tr('login_btn');
+      applyAuthMode();
       $('auth-error').textContent = '';
-      $('auth-pass-hint').hidden = login;                 // dica só no cadastro
-      $('auth-pass').setAttribute('autocomplete', login ? 'current-password' : 'new-password');
     });
 
     form.addEventListener('submit', async function (e) {
@@ -1206,6 +1213,7 @@
     data = null;
     $('app').hidden = true; $('auth-screen').hidden = false;
     $('auth-user').value = ''; $('auth-pass').value = ''; $('auth-error').textContent = '';
+    resetAuthToLogin();
   }
 
   /* ---- Confirmação estilizada (substitui o confirm() do navegador) ---- */
@@ -1311,6 +1319,7 @@
       Store.logout(); data = null;
       $('app').hidden = true; $('auth-screen').hidden = false;
       $('auth-user').value = ''; $('auth-pass').value = ''; $('auth-error').textContent = '';
+      resetAuthToLogin();
     });
   }
 
