@@ -45,16 +45,28 @@
   /* --------------------- categorias padrão -------------------------- */
   function defaultCategories() {
     return [
-      { id: 'cat-moradia',  name: 'Moradia',     color: '#ff2d78' },
-      { id: 'cat-alimento', name: 'Alimentação', color: '#b94dff' },
-      { id: 'cat-outros',   name: 'Outros',      color: '#8257ff' },
-      { id: 'cat-compras',  name: 'Compras',     color: '#3366ff' },
-      { id: 'cat-transp',   name: 'Transporte',  color: '#19b9ff' },
-      { id: 'cat-contas',   name: 'Contas',      color: '#00d6b4' },
-      { id: 'cat-saude',    name: 'Saúde',       color: '#2fdd76' },
-      { id: 'cat-lazer',    name: 'Lazer',       color: '#c2ee2e' }
+      { id: 'cat-moradia',  key: 'moradia',  name: 'Moradia',     color: '#ff2d78', preset: true },
+      { id: 'cat-alimento', key: 'alimento', name: 'Alimentação', color: '#b94dff', preset: true },
+      { id: 'cat-outros',   key: 'outros',   name: 'Outros',      color: '#8257ff', preset: true },
+      { id: 'cat-compras',  key: 'compras',  name: 'Compras',     color: '#3366ff', preset: true },
+      { id: 'cat-transp',   key: 'transp',   name: 'Transporte',  color: '#19b9ff', preset: true },
+      { id: 'cat-contas',   key: 'contas',   name: 'Contas',      color: '#00d6b4', preset: true },
+      { id: 'cat-saude',    key: 'saude',    name: 'Saúde',       color: '#2fdd76', preset: true },
+      { id: 'cat-lazer',    key: 'lazer',    name: 'Lazer',       color: '#c2ee2e', preset: true }
     ];
   }
+
+  // mapa p/ migrar contas antigas: id -> {key, pt} das categorias padrão
+  var PRESET_MAP = {
+    'cat-moradia':  { key: 'moradia',  pt: 'Moradia' },
+    'cat-alimento': { key: 'alimento', pt: 'Alimentação' },
+    'cat-outros':   { key: 'outros',   pt: 'Outros' },
+    'cat-compras':  { key: 'compras',  pt: 'Compras' },
+    'cat-transp':   { key: 'transp',   pt: 'Transporte' },
+    'cat-contas':   { key: 'contas',   pt: 'Contas' },
+    'cat-saude':    { key: 'saude',    pt: 'Saúde' },
+    'cat-lazer':    { key: 'lazer',    pt: 'Lazer' }
+  };
 
   /* ----------------- dados iniciais (usuário novo começa limpo) ----- */
   function freshUserData() {
@@ -104,6 +116,11 @@
     if (data.budget == null) data.budget = 5000;
     if (!data.currency) data.currency = 'BRL';
     if (!data.categories) data.categories = defaultCategories();
+    // marca como "preset" (traduzível) as categorias padrão intocadas de contas antigas
+    (data.categories || []).forEach(function (c) {
+      var p = PRESET_MAP[c.id];
+      if (p && c.preset === undefined && c.name === p.pt) { c.preset = true; c.key = p.key; }
+    });
     if (!data.recurrences) data.recurrences = [];
     return data;
   }
