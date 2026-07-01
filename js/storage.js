@@ -158,6 +158,15 @@
       localStorage.removeItem(KEYS.user);
     },
 
+    async deleteAccount() {
+      try {
+        await api('DELETE', '/api/account');
+        localStorage.removeItem(KEYS.token);
+        localStorage.removeItem(KEYS.user);
+        return { ok: true };
+      } catch (e) { return { ok: false, error: e.message }; }
+    },
+
     currentUser() {
       return localStorage.getItem(KEYS.token) ? localStorage.getItem(KEYS.user) : null;
     },
