@@ -34,6 +34,14 @@
       user_label: 'Usuário', pass_label: 'Senha',
       load_error: 'Não foi possível carregar seus dados.',
       menu_budget: 'Definir orçamento', menu_currency: 'Moeda', menu_language: 'Idioma', menu_logout: 'Sair',
+      menu_delete_account: 'Excluir conta',
+      del_acc_title: 'Excluir conta',
+      del_acc_warn: 'Isto apaga permanentemente sua conta e todos os seus dados (despesas, investimentos, categorias). Não dá para desfazer.',
+      del_acc_export: 'Quer guardar uma cópia? Feche isto e use "Exportar dados" antes.',
+      del_acc_word: 'EXCLUIR',
+      del_acc_prompt: 'Para confirmar, digite {x} abaixo:',
+      del_acc_btn: 'Excluir minha conta',
+      del_acc_fail: 'Não foi possível excluir a conta. Tente novamente.',
       menu_privacy: 'Política de privacidade', privacy: 'Privacidade',
       saving: 'Salvando…', saved: 'Salvo', save_error: 'Falha ao salvar', retry: 'Tentar de novo',
       menu_export: 'Exportar dados', export_title: 'Exportar dados',
@@ -94,6 +102,14 @@
       user_label: 'Username', pass_label: 'Password',
       load_error: "Couldn't load your data.",
       menu_budget: 'Set budget', menu_currency: 'Currency', menu_language: 'Language', menu_logout: 'Log out',
+      menu_delete_account: 'Delete account',
+      del_acc_title: 'Delete account',
+      del_acc_warn: 'This permanently deletes your account and all your data (expenses, investments, categories). This cannot be undone.',
+      del_acc_export: 'Want to keep a copy? Close this and use "Export data" first.',
+      del_acc_word: 'DELETE',
+      del_acc_prompt: 'To confirm, type {x} below:',
+      del_acc_btn: 'Delete my account',
+      del_acc_fail: 'Could not delete the account. Please try again.',
       menu_privacy: 'Privacy policy', privacy: 'Privacy',
       saving: 'Saving…', saved: 'Saved', save_error: "Couldn't save", retry: 'Retry',
       menu_export: 'Export data', export_title: 'Export data',
@@ -154,6 +170,14 @@
       user_label: 'Usuario', pass_label: 'Contraseña',
       load_error: 'No se pudieron cargar tus datos.',
       menu_budget: 'Definir presupuesto', menu_currency: 'Moneda', menu_language: 'Idioma', menu_logout: 'Salir',
+      menu_delete_account: 'Eliminar cuenta',
+      del_acc_title: 'Eliminar cuenta',
+      del_acc_warn: 'Esto elimina permanentemente tu cuenta y todos tus datos (gastos, inversiones, categorías). No se puede deshacer.',
+      del_acc_export: '¿Quieres guardar una copia? Cierra esto y usa "Exportar datos" antes.',
+      del_acc_word: 'ELIMINAR',
+      del_acc_prompt: 'Para confirmar, escribe {x} abajo:',
+      del_acc_btn: 'Eliminar mi cuenta',
+      del_acc_fail: 'No se pudo eliminar la cuenta. Inténtalo de nuevo.',
       menu_privacy: 'Política de privacidad', privacy: 'Privacidad',
       saving: 'Guardando…', saved: 'Guardado', save_error: 'No se pudo guardar', retry: 'Reintentar',
       menu_export: 'Exportar datos', export_title: 'Exportar datos',
@@ -1143,6 +1167,47 @@
     save(); renderAll(); openRecurrences();
   }
 
+  /* ---- Excluir conta (digite pra confirmar) ---- */
+  function openDeleteAccount() {
+    var word = tr('del_acc_word');
+    $('modal-title').textContent = tr('del_acc_title');
+    $('modal-form').innerHTML =
+      '<p class="field__hint" style="margin-top:0;color:#ff5a6a">' + tr('del_acc_warn') + '</p>' +
+      '<p class="field__hint">' + tr('del_acc_export') + '</p>' +
+      '<label class="field"><span class="field__label">' + tr('del_acc_prompt', { x: word }) + '</span>' +
+        '<input class="field__input" id="del-acc-input" autocomplete="off" autocapitalize="characters" placeholder="' + word + '"></label>' +
+      '<div class="modal__actions">' +
+        '<button type="button" class="btn" data-close>' + tr('cancel') + '</button>' +
+        '<button type="button" class="btn btn--danger" id="del-acc-btn" disabled>' + tr('del_acc_btn') + '</button>' +
+      '</div>';
+    modalSubmit = null;
+    if ($('modal').hidden) lastFocus = document.activeElement;
+    $('modal').hidden = false;
+    var input = $('del-acc-input'), btn = $('del-acc-btn');
+    input.addEventListener('input', function () {
+      btn.disabled = input.value.trim().toUpperCase() !== word.toUpperCase();
+    });
+    btn.addEventListener('click', doDeleteAccount);
+    input.focus();
+  }
+
+  async function doDeleteAccount() {
+    var btn = $('del-acc-btn'); if (btn) btn.disabled = true;
+    var res = await Store.deleteAccount();
+    if (!res.ok) {
+      var p = document.createElement('p');
+      p.className = 'field__hint'; p.style.color = '#ff5a6a';
+      p.textContent = tr('del_acc_fail');
+      $('modal-form').appendChild(p);
+      if (btn) btn.disabled = false;
+      return;
+    }
+    closeModal();
+    data = null;
+    $('app').hidden = true; $('auth-screen').hidden = false;
+    $('auth-user').value = ''; $('auth-pass').value = ''; $('auth-error').textContent = '';
+  }
+
   /* ---- Confirmação estilizada (substitui o confirm() do navegador) ---- */
   function confirmDialog(message, alertOnly) {
     return new Promise(function (resolve) {
@@ -1241,6 +1306,7 @@
     $('menu-fixas').addEventListener('click', function () { menu.hidden = true; openRecurrences(); });
     $('menu-currency').addEventListener('click', function () { menu.hidden = true; openCurrency(); });
     $('menu-language').addEventListener('click', function () { menu.hidden = true; openLanguage(); });
+    $('menu-delete-account').addEventListener('click', function () { menu.hidden = true; openDeleteAccount(); });
     $('menu-logout').addEventListener('click', function () {
       Store.logout(); data = null;
       $('app').hidden = true; $('auth-screen').hidden = false;
