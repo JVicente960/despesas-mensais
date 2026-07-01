@@ -256,6 +256,17 @@ export async function onRequest(context) {
       return json({ ok: true });
     }
 
+    /* ---- excluir conta (direito de exclusão / LGPD) ---- */
+    if (route === 'account' && method === 'DELETE') {
+      const username = await userFromToken(env, request);
+      if (!username) return json({ error: 'Não autenticado.' }, 401);
+      // apaga tudo que pertence ao usuário: dados, sessões e a própria conta
+      await env.DB.prepare('DELETE FROM user_data WHERE username = ?').bind(username).run();
+      await env.DB.prepare('DELETE FROM sessions WHERE username = ?').bind(username).run();
+      await env.DB.prepare('DELETE FROM users WHERE username = ?').bind(username).run();
+      return json({ ok: true });
+    }
+
     /* ---- dados do usuário ---- */
     if (route === 'data') {
       const username = await userFromToken(env, request);
